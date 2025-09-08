@@ -1,28 +1,37 @@
-import {
-  TextInput,
-  StyleSheet,
-  Text,
-  View,
-  TouchableOpacity,
-} from 'react-native';
+import { TextInput, StyleSheet, TouchableOpacity } from 'react-native';
 import { useState } from 'react';
 import Entypo from '@expo/vector-icons/Entypo';
+import { ThemedView } from '../ThemedView';
+import { ThemedText } from '../ThemedText';
+import { useLoginMutation } from '@/hooks/useAuth';
+import { useRouter } from 'expo-router';
 
 export default function LoginForm() {
-  const [name, onChangeName] = useState('');
+  const router = useRouter();
+  const [email, onChangeemail] = useState('');
   const [password, onChangePassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const { mutateAsync: login } = useLoginMutation();
 
+  async function handleSubmit() {
+    try {
+      await login({ email, password });
+      console.log('Signed in');
+      router.replace('/(tabs)');
+    } catch (error) {
+      console.log('Error logging user', error);
+    }
+  }
   return (
-    <View className="w-full">
+    <ThemedView className="w-full">
       <TextInput
         style={styles.input}
-        onChangeText={onChangeName}
-        value={name}
+        onChangeText={onChangeemail}
+        value={email}
         placeholder="Enter your name here"
       />
 
-      <View style={styles.passwordContainer}>
+      <ThemedView style={styles.passwordContainer}>
         <TextInput
           id="passwordInput"
           style={[{ flex: 1, marginRight: 0 }]}
@@ -41,13 +50,13 @@ export default function LoginForm() {
             <Entypo name="eye" size={24} color="black" />
           )}
         </TouchableOpacity>
-      </View>
-      <View className="mt-auto bg-">
-        <TouchableOpacity>
-          <Text>Login</Text>
+      </ThemedView>
+      <ThemedView className="mt-auto ">
+        <TouchableOpacity style={styles.button} onPress={handleSubmit}>
+          <ThemedText>Login</ThemedText>
         </TouchableOpacity>
-      </View>
-    </View>
+      </ThemedView>
+    </ThemedView>
   );
 }
 
@@ -69,5 +78,12 @@ const styles = StyleSheet.create({
   },
   eyeIcon: {
     marginLeft: 8,
+  },
+  button: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 10,
+    backgroundColor: '#007AFF',
+    borderRadius: 20,
   },
 });

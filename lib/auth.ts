@@ -45,7 +45,10 @@ export const authStorage = {
 };
 
 export const authApi = {
-  login: async (email: string, password: string) => {
+  login: async (
+    email: string,
+    password: string,
+  ): Promise<{ user: User; accessToken: string }> => {
     const response = await fetch(`${BACKEND_URL}/auth/login`, {
       method: 'POST',
       headers: {
@@ -82,19 +85,8 @@ export const authApi = {
     return response.json();
   },
 
-  logout: async (token: string) => {
-    const response = await fetch(`${BACKEND_URL}/auth/logout`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error('Logout failed');
-    }
-
-    return response.json();
+  logout: async () => {
+    return await authStorage.clearAuth();
   },
 
   getCurrentUser: async (token: string) => {
@@ -102,6 +94,43 @@ export const authApi = {
       headers: {
         Authorization: `Bearer ${token}`,
       },
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch user');
+    }
+
+    return response.json();
+  },
+
+  updateCurrentUser: async (
+    id: string,
+    data: Partial<User>,
+    token: string,
+  ): Promise<{ user: User }> => {
+    console.log(id);
+    console.log(data);
+    const formData = new FormData();
+    if (data.id) formData.append('id', String(data.id));
+    if (data.name) formData.append('name', data.name);
+    if (data.email) formData.append('email', data.email);
+
+    if (data.profilePicture) {
+      const uriParts = data.profilePicture.split('.');
+      const fileType = uriParts[uriParts.length - 1];
+
+      formData.append('profilePicture', {
+        uri: data.profilePicture,
+        name: `profile.${fileType}`,
+        type: `image/${fileType}`,
+      } as any);
+    }
+    const response = await fetch(`${BACKEND_URL}/auth/${id}`, {
+      method: 'PATCH',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: formData,
     });
 
     if (!response.ok) {

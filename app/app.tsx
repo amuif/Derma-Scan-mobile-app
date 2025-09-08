@@ -10,20 +10,16 @@ import 'react-native-reanimated';
 import './global.css';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { useTokenQuery } from '@/hooks/useAuth';
-import { ThemedText } from '@/components/ThemedText';
-import { GluestackUIProvider } from '@gluestack-ui/themed';
-import { config } from '@gluestack-ui/config';
 
 export default function AppLayout() {
   const colorScheme = useColorScheme();
   const pathname = usePathname();
   const { data: token, isLoading } = useTokenQuery();
-
   const [loaded] = useFonts({
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
   });
 
-  if (!loaded) {
+  if (!loaded || isLoading) {
     // Async font loading only occurs in development.
     return null;
   }
@@ -32,13 +28,8 @@ export default function AppLayout() {
     return <Redirect href="/login" />;
   }
 
-  if (isLoading) {
-    return <ThemedText>Loading.......</ThemedText>;
-  }
 
   return (
-     <GluestackUIProvider config={config}>
-
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <Stack>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
@@ -47,6 +38,5 @@ export default function AppLayout() {
       </Stack>
       <StatusBar />
     </ThemeProvider>
-        </GluestackUIProvider>
   );
 }

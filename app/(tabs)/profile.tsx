@@ -26,8 +26,6 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContentContainer: {
-    // padding: 16,
-    // paddingBottom: 40, // Extra padding at the bottom for better scrolling
   },
   container: {
     flex: 1,

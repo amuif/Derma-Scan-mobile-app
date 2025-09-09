@@ -287,10 +287,8 @@ const styles = StyleSheet.create({
     color: '#111827',
     paddingVertical: 8,
     paddingHorizontal: 12,
-    backgroundColor: '#f9fafb',
     borderRadius: 6,
     borderWidth: 1,
-    borderColor: '#d1d5db',
   },
   statusContainer: {
     paddingTop: 16,

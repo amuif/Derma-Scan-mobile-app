@@ -18,13 +18,14 @@ export default function AppLayout() {
   const [loaded] = useFonts({
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
   });
+  const publicRoutes = ['/login', '/signup'];
 
   if (!loaded || isLoading) {
     // Async font loading only occurs in development.
     return null;
   }
 
-  if (!token && pathname !== '/login') {
+  if (!token && !publicRoutes.includes(pathname)) {
     return <Redirect href="/login" />;
   }
 
@@ -33,6 +34,7 @@ export default function AppLayout() {
       <Stack>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="login" options={{ headerShown: false }} />
+        <Stack.Screen name="signup" options={{ headerShown: false }} />
         <Stack.Screen name="+not-found" />
       </Stack>
       <StatusBar />

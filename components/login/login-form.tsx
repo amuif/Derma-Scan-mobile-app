@@ -1,10 +1,16 @@
-import { TextInput, StyleSheet, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
+import {
+  TextInput,
+  StyleSheet,
+  TouchableOpacity,
+  Alert,
+  ActivityIndicator,
+} from 'react-native';
 import { useState } from 'react';
 import Entypo from '@expo/vector-icons/Entypo';
 import { ThemedView } from '../ThemedView';
 import { ThemedText } from '../ThemedText';
 import { useLoginMutation } from '@/hooks/useAuth';
-import { useRouter } from 'expo-router';
+import { Link, Redirect, useRouter } from 'expo-router';
 import { IconMail, IconLock, IconArrowRight } from '@tabler/icons-react-native';
 
 export default function LoginForm() {
@@ -16,6 +22,15 @@ export default function LoginForm() {
   const [errors, setErrors] = useState({ email: '', password: '' });
   const { mutateAsync: login } = useLoginMutation();
 
+  function handleSignIn() {
+    console.log('signin pressed');
+    try {
+      router.push('/signup');
+      console.log('Navigation attempted');
+    } catch (error) {
+      console.error('Navigation error:', error);
+    }
+  }
   const validateForm = () => {
     let valid = true;
     const newErrors = { email: '', password: '' };
@@ -48,13 +63,13 @@ export default function LoginForm() {
     setIsLoading(true);
     try {
       await login({ email, password });
-      console.log('Signed in successfully');
       router.replace('/(tabs)');
     } catch (error: any) {
       console.log('Error logging user', error);
       Alert.alert(
         'Login Failed',
-        error.response?.data?.message || 'Invalid email or password. Please try again.'
+        error.response?.data?.message ||
+          'Invalid email or password. Please try again.',
       );
     } finally {
       setIsLoading(false);
@@ -62,14 +77,15 @@ export default function LoginForm() {
   }
 
   const handleForgotPassword = () => {
-    // Navigate to forgot password screen
-    console.log("Navigate to forgot password");
-    Alert.alert('Forgot Password', 'Password reset functionality would be implemented here.');
+    console.log('Navigate to forgot password');
+    Alert.alert(
+      'Forgot Password',
+      'Password reset functionality would be implemented here.',
+    );
   };
 
   return (
     <ThemedView style={styles.container}>
-      {/* Email Input */}
       <ThemedView style={styles.inputContainer}>
         <ThemedView style={styles.inputLabelContainer}>
           <IconMail size={16} color="#6b7280" />
@@ -91,13 +107,17 @@ export default function LoginForm() {
         ) : null}
       </ThemedView>
 
-      {/* Password Input */}
       <ThemedView style={styles.inputContainer}>
         <ThemedView style={styles.inputLabelContainer}>
           <IconLock size={16} color="#6b7280" />
           <ThemedText style={styles.inputLabel}>Password</ThemedText>
         </ThemedView>
-        <ThemedView style={[styles.passwordContainer, errors.password ? styles.inputError : null]}>
+        <ThemedView
+          style={[
+            styles.passwordContainer,
+            errors.password ? styles.inputError : null,
+          ]}
+        >
           <TextInput
             style={styles.passwordInput}
             onChangeText={setPassword}
@@ -124,20 +144,20 @@ export default function LoginForm() {
         {errors.password ? (
           <ThemedText style={styles.errorText}>{errors.password}</ThemedText>
         ) : null}
-        
-        {/* Forgot Password Link */}
-        <TouchableOpacity 
+
+        <TouchableOpacity
           style={styles.forgotPasswordContainer}
           onPress={handleForgotPassword}
           disabled={isLoading}
         >
-          <ThemedText style={styles.forgotPasswordText}>Forgot your password?</ThemedText>
+          <ThemedText style={styles.forgotPasswordText}>
+            Forgot your password?
+          </ThemedText>
         </TouchableOpacity>
       </ThemedView>
 
-      {/* Login Button */}
-      <TouchableOpacity 
-        style={[styles.button, isLoading && styles.buttonDisabled]} 
+      <TouchableOpacity
+        style={[styles.button, isLoading && styles.buttonDisabled]}
         onPress={handleSubmit}
         disabled={isLoading}
       >
@@ -151,20 +171,17 @@ export default function LoginForm() {
         )}
       </TouchableOpacity>
 
-      {/* Divider */}
       <ThemedView style={styles.dividerContainer}>
         <ThemedView style={styles.dividerLine} />
         <ThemedText style={styles.dividerText}>or</ThemedText>
         <ThemedView style={styles.dividerLine} />
       </ThemedView>
 
-      {/* Sign Up Prompt */}
       <ThemedView style={styles.signupContainer}>
-        <ThemedText style={styles.signupText}>Don&apos;t have an account? </ThemedText>
-        <TouchableOpacity 
-          onPress={() => console.log("Navigate to sign up")}
-          disabled={isLoading}
-        >
+        <ThemedText style={styles.signupText}>
+          Don&apos;t have an account?{' '}
+        </ThemedText>
+        <TouchableOpacity onPress={handleSignIn} disabled={isLoading}>
           <ThemedText style={styles.signupLink}>Sign up</ThemedText>
         </TouchableOpacity>
       </ThemedView>
@@ -177,6 +194,7 @@ const styles = StyleSheet.create({
     width: '100%',
     padding: 24,
     marginTop: 16,
+    marginBottom: 10,
   },
   inputContainer: {
     marginBottom: 20,

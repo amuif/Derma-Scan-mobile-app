@@ -3,7 +3,7 @@ import { ThemedText } from '../ThemedText';
 import { ThemedView } from '../ThemedView';
 import { IconMicroscope } from '@tabler/icons-react-native';
 
-const LoginHeader = () => {
+const SignUpHeader = () => {
   return (
     <ThemedView style={styles.container}>
       <ThemedView style={styles.content}>
@@ -13,10 +13,10 @@ const LoginHeader = () => {
           </ThemedView>
         </ThemedView>
 
-        <ThemedText style={styles.title}>WELCOME BACK</ThemedText>
+        <ThemedText style={styles.title}>DERMA SCAN</ThemedText>
 
         <ThemedText style={styles.subtitle}>
-          Sign in to continue your skin health journey
+          Skin health insights powered by AI
         </ThemedText>
       </ThemedView>
 
@@ -72,7 +72,7 @@ const styles = StyleSheet.create({
     textShadowRadius: 8,
   },
   subtitle: {
-    fontSize: 16,
+    fontSize: 18,
     color: '#64748b',
     fontWeight: '500',
     textAlign: 'center',
@@ -111,4 +111,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default LoginHeader;
+export default SignUpHeader;

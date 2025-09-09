@@ -11,7 +11,7 @@ export const getBackendUrl = () => {
     }
   } else {
     // Production - use your deployed backend
-    return 'https://your-production-api.com/api';
+    return 'https://derma-scan-backend-h0vm.onrender.com/api';
   }
 };
 

@@ -17,7 +17,7 @@ module.exports = defineConfig([
       },
     },
     rules: {
-      'import/no-unresolved': ['error', { ignore: ['^@/'] }], 
+      'import/no-unresolved': ['error', { ignore: ['^@/'] }],
     },
   },
 ]);

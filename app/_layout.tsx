@@ -5,7 +5,6 @@ import { ReactQueryProvider } from '@/providers/authProviders';
 import AppLayout from './app';
 
 export default function RootLayout() {
-
   const [loaded] = useFonts({
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
   });
@@ -16,7 +15,7 @@ export default function RootLayout() {
   }
   return (
     <ReactQueryProvider>
-      <AppLayout/>
-   </ReactQueryProvider>
+      <AppLayout />
+    </ReactQueryProvider>
   );
 }

@@ -28,7 +28,6 @@ export default function AppLayout() {
     return <Redirect href="/login" />;
   }
 
-
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <Stack>

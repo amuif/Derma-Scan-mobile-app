@@ -126,6 +126,27 @@ export const useLogoutMutation = () => {
     },
   });
 };
+export const useDeleteMutation = () => {
+  const queryClient = useQueryClient();
+  const router = useRouter();
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const token = await authStorage.getToken();
+      authApi.deleteCurrentUser(id, token!);
+    },
+    onSuccess: async () => {
+      router.replace('/login');
+
+      queryClient.removeQueries({ queryKey: authQueryKeys.all });
+    },
+    onError: async (error) => {
+      console.error('Delete Current user error', error);
+      await authStorage.clearAuth();
+      queryClient.removeQueries({ queryKey: authQueryKeys.all });
+    },
+  });
+};
 export const authQueryKeys = {
   all: ['auth'] as const,
   user: () => [...authQueryKeys.all, 'user'] as const,

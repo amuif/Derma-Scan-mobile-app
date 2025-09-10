@@ -2,6 +2,7 @@ import { authApi, authStorage } from '@/lib/auth';
 import { useAuthStore } from '@/stores/auth';
 import { User } from '@/types/user';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { router } from 'expo-router';
 import { useRouter } from 'expo-router';
 
 export const useTokenQuery = () => {
@@ -94,12 +95,14 @@ export const useRegisterMutation = () => {
       profilePicture?: string;
     }) => authApi.register(email, password, name, profilePicture),
     onSuccess: async (data) => {
-      await authStorage.setToken(data.access_token);
+      console.log(data);
+      await authStorage.setToken(data.accessToken);
       await authStorage.setUser(data.user);
 
-      queryClient.setQueryData(authQueryKeys.token(), data.access_token);
+      queryClient.setQueryData(authQueryKeys.token(), data.accessToken);
       queryClient.setQueryData(authQueryKeys.user(), data.user);
       queryClient.setQueryData(authQueryKeys.currentUser(), data.user);
+      router.replace('/(tabs)');
     },
     onError: (error) => {
       console.error('Registration error:', error);

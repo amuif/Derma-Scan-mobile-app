@@ -20,9 +20,6 @@ const LoginHeader = () => {
         </ThemedText>
       </ThemedView>
 
-      <ThemedView style={styles.decorationCircle1} />
-      <ThemedView style={styles.decorationCircle2} />
-      <ThemedView style={styles.decorationCircle3} />
     </ThemedView>
   );
 };
@@ -32,15 +29,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingTop: 40,
     paddingBottom: 32,
-    backgroundColor: '#f8fafc',
-    borderBottomLeftRadius: 30,
-    borderBottomRightRadius: 30,
     overflow: 'hidden',
   },
   content: {
     alignItems: 'center',
     marginBottom: 8,
-    zIndex: 2,
   },
   logoContainer: {
     marginBottom: 20,
@@ -52,7 +45,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#e0e7ff',
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#6366f1',
+    shadowColor: '#3b82f6',
     shadowOffset: {
       width: 0,
       height: 6,
@@ -64,7 +57,6 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 32,
     fontWeight: '800',
-    color: '#1e293b',
     marginBottom: 12,
     letterSpacing: 1,
     textShadowColor: 'rgba(99, 102, 241, 0.15)',

@@ -5,14 +5,14 @@ import { ThemedView } from '@/components/ThemedView';
 
 export default function LoginScreen() {
   return (
-    <KeyboardAvoidingView 
+    <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       style={{ flex: 1 }}
     >
-      <ScrollView 
+      <ScrollView
         contentContainerStyle={{ flexGrow: 1 }}
         keyboardShouldPersistTaps="handled"
-        className='bg-transparent'
+        className="bg-transparent"
       >
         <ThemedView className="flex-col gap-3 items-center justify-center px-2 h-full pt-24 ">
           <LoginHeader />

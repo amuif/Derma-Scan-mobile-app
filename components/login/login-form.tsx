@@ -4,17 +4,21 @@ import {
   TouchableOpacity,
   Alert,
   ActivityIndicator,
+  useColorScheme,
 } from 'react-native';
 import { useState } from 'react';
 import Entypo from '@expo/vector-icons/Entypo';
 import { ThemedView } from '../ThemedView';
 import { ThemedText } from '../ThemedText';
 import { useLoginMutation } from '@/hooks/useAuth';
-import { Link, Redirect, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { IconMail, IconLock, IconArrowRight } from '@tabler/icons-react-native';
 
 export default function LoginForm() {
   const router = useRouter();
+  const theme = useColorScheme();
+  const isDark = theme === 'dark';
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -22,20 +26,22 @@ export default function LoginForm() {
   const [errors, setErrors] = useState({ email: '', password: '' });
   const { mutateAsync: login } = useLoginMutation();
 
+  const inputTextColor = isDark ? '#fff' : '#111827';
+  const placeholderColor = isDark ? '#9ca3af' : '#6b7280';
+  const borderColor = isDark ? '#444' : '#d1d5db';
+  const iconColor = isDark ? '#d1d5db' : '#6b7280';
+  const dividerColor = isDark ? '#444' : '#e5e7eb';
+  const dividerTextColor = isDark ? '#9ca3af' : '#6b7280';
+  const signupTextColor = dividerTextColor;
+
   function handleSignIn() {
-    console.log('signin pressed');
-    try {
-      router.push('/signup');
-      console.log('Navigation attempted');
-    } catch (error) {
-      console.error('Navigation error:', error);
-    }
+    router.push('/signup');
   }
+
   const validateForm = () => {
     let valid = true;
     const newErrors = { email: '', password: '' };
 
-    // Email validation
     if (!email.trim()) {
       newErrors.email = 'Email is required';
       valid = false;
@@ -44,7 +50,6 @@ export default function LoginForm() {
       valid = false;
     }
 
-    // Password validation
     if (!password.trim()) {
       newErrors.password = 'Password is required';
       valid = false;
@@ -77,7 +82,6 @@ export default function LoginForm() {
   }
 
   const handleForgotPassword = () => {
-    console.log('Navigate to forgot password');
     Alert.alert(
       'Forgot Password',
       'Password reset functionality would be implemented here.',
@@ -88,15 +92,19 @@ export default function LoginForm() {
     <ThemedView style={styles.container}>
       <ThemedView style={styles.inputContainer}>
         <ThemedView style={styles.inputLabelContainer}>
-          <IconMail size={16} color="#6b7280" />
+          <IconMail size={16} color={iconColor} />
           <ThemedText style={styles.inputLabel}>Email Address</ThemedText>
         </ThemedView>
         <TextInput
-          style={[styles.input, errors.email ? styles.inputError : null]}
+          style={[
+            styles.input,
+            { color: inputTextColor, borderColor },
+            errors.email ? styles.inputError : null,
+          ]}
           onChangeText={setEmail}
           value={email}
           placeholder="Enter your email address"
-          placeholderTextColor="#9ca3af"
+          placeholderTextColor={placeholderColor}
           keyboardType="email-address"
           autoCapitalize="none"
           autoCorrect={false}
@@ -107,23 +115,25 @@ export default function LoginForm() {
         ) : null}
       </ThemedView>
 
+      {/* Password */}
       <ThemedView style={styles.inputContainer}>
         <ThemedView style={styles.inputLabelContainer}>
-          <IconLock size={16} color="#6b7280" />
+          <IconLock size={16} color={iconColor} />
           <ThemedText style={styles.inputLabel}>Password</ThemedText>
         </ThemedView>
         <ThemedView
           style={[
             styles.passwordContainer,
+            { borderColor },
             errors.password ? styles.inputError : null,
           ]}
         >
           <TextInput
-            style={styles.passwordInput}
+            style={[styles.passwordInput, { color: inputTextColor }]}
             onChangeText={setPassword}
             value={password}
             placeholder="Enter your password"
-            placeholderTextColor="#9ca3af"
+            placeholderTextColor={placeholderColor}
             secureTextEntry={!showPassword}
             autoCapitalize="none"
             autoCorrect={false}
@@ -135,9 +145,9 @@ export default function LoginForm() {
             disabled={isLoading}
           >
             {showPassword ? (
-              <Entypo name="eye-with-line" size={20} color="#6b7280" />
+              <Entypo name="eye-with-line" size={20} color={iconColor} />
             ) : (
-              <Entypo name="eye" size={20} color="#6b7280" />
+              <Entypo name="eye" size={20} color={iconColor} />
             )}
           </TouchableOpacity>
         </ThemedView>
@@ -156,6 +166,7 @@ export default function LoginForm() {
         </TouchableOpacity>
       </ThemedView>
 
+      {/* Submit button */}
       <TouchableOpacity
         style={[styles.button, isLoading && styles.buttonDisabled]}
         onPress={handleSubmit}
@@ -171,14 +182,22 @@ export default function LoginForm() {
         )}
       </TouchableOpacity>
 
+      {/* Divider */}
       <ThemedView style={styles.dividerContainer}>
-        <ThemedView style={styles.dividerLine} />
-        <ThemedText style={styles.dividerText}>or</ThemedText>
-        <ThemedView style={styles.dividerLine} />
+        <ThemedView
+          style={[styles.dividerLine, { backgroundColor: dividerColor }]}
+        />
+        <ThemedText style={[styles.dividerText, { color: dividerTextColor }]}>
+          or
+        </ThemedText>
+        <ThemedView
+          style={[styles.dividerLine, { backgroundColor: dividerColor }]}
+        />
       </ThemedView>
 
+      {/* Signup */}
       <ThemedView style={styles.signupContainer}>
-        <ThemedText style={styles.signupText}>
+        <ThemedText style={[styles.signupText, { color: signupTextColor }]}>
           Don&apos;t have an account?{' '}
         </ThemedText>
         <TouchableOpacity onPress={handleSignIn} disabled={isLoading}>
@@ -207,18 +226,14 @@ const styles = StyleSheet.create({
   inputLabel: {
     fontSize: 14,
     fontWeight: '500',
-    color: '#374151',
     marginLeft: 8,
   },
   input: {
     height: 50,
     borderWidth: 1,
-    borderColor: '#d1d5db',
     borderRadius: 12,
     paddingHorizontal: 16,
     fontSize: 16,
-    backgroundColor: '#f9fafb',
-    color: '#111827',
   },
   inputError: {
     borderColor: '#ef4444',
@@ -234,15 +249,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     height: 50,
     borderWidth: 1,
-    borderColor: '#d1d5db',
     borderRadius: 12,
     paddingHorizontal: 16,
-    backgroundColor: '#f9fafb',
   },
   passwordInput: {
     flex: 1,
     fontSize: 16,
-    color: '#111827',
   },
   eyeIcon: {
     padding: 4,
@@ -267,10 +279,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
     marginBottom: 24,
     shadowColor: '#3b82f6',
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 4,
     elevation: 4,
@@ -291,11 +300,9 @@ const styles = StyleSheet.create({
   dividerLine: {
     flex: 1,
     height: 1,
-    backgroundColor: '#e5e7eb',
   },
   dividerText: {
     marginHorizontal: 16,
-    color: '#6b7280',
     fontWeight: '500',
   },
   signupContainer: {
@@ -303,9 +310,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginTop: 8,
   },
-  signupText: {
-    color: '#6b7280',
-  },
+  signupText: {},
   signupLink: {
     color: '#3b82f6',
     fontWeight: '600',

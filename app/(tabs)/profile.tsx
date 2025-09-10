@@ -25,8 +25,7 @@ const styles = StyleSheet.create({
   scrollContainer: {
     flex: 1,
   },
-  scrollContentContainer: {
-  },
+  scrollContentContainer: {},
   container: {
     flex: 1,
   },

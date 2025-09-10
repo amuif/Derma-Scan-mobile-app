@@ -70,7 +70,7 @@ export const authApi = {
     name: string,
     profilePicture?: string,
   ) => {
-    const response = await fetch(`${BACKEND_URL}/auth/register`, {
+    const response = await fetch(`${BACKEND_URL}/auth/signup`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

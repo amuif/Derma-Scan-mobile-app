@@ -7,6 +7,7 @@ import TabBarBackground from '@/components/ui/TabBarBackground';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { HapticTab } from '@/components/HapticTab';
+import { IconUpload } from '@tabler/icons-react-native';
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
@@ -36,6 +37,14 @@ export default function TabLayout() {
           ),
         }}
       />
+      <Tabs.Screen
+        name="upload"
+        options={{
+          title: 'Upload',
+          tabBarIcon: ({ color }) => <IconUpload size={28} color={color} />,
+        }}
+      />
+
       <Tabs.Screen
         name="explore"
         options={{

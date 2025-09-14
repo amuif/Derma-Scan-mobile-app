@@ -7,7 +7,7 @@ import { IconPencil } from '@tabler/icons-react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { useEffect, useState } from 'react';
 import { useUpdateCurrentUser } from '@/hooks/useAuth';
-import { BACKEND_BASE, BACKEND_URL } from '@/constants/backend-url';
+import { BACKEND_BASE } from '@/constants/backend-url';
 
 export default function ProfileHeader() {
   const { user } = useAuthStore();
@@ -17,18 +17,10 @@ export default function ProfileHeader() {
   );
 
   useEffect(() => {
-    setProfilePicturePreview(user?.profilePicture);
-    console.log(profilePicturePreview);
-  }, [user, profilePicturePreview]);
-
-  const getProfilePictureUri = () => {
-    if (!profilePicturePreview) return undefined;
-
-    if (profilePicturePreview.startsWith('file://'))
-      return profilePicturePreview;
-
-    return `${profilePicturePreview}`;
-  };
+    if (user?.profilePicture) {
+      setProfilePicturePreview(user.profilePicture);
+    }
+  }, [user]);
 
   const pickImage = async () => {
     try {
@@ -48,6 +40,13 @@ export default function ProfileHeader() {
     }
   };
 
+  // Construct the full image URL
+  const fullImageUrl = profilePicturePreview
+    ? `${BACKEND_BASE}${profilePicturePreview}`
+    : null;
+
+  console.log('Rendering with image URL:', fullImageUrl);
+
   return (
     user && (
       <ThemedView className="pt-5 flex-col gap-4">
@@ -58,7 +57,13 @@ export default function ProfileHeader() {
         <ThemedView style={styles.imageContainer}>
           <Image
             style={styles.image}
-            source={{ uri: getProfilePictureUri() }}
+            source={{
+              uri:
+                fullImageUrl ||
+                'https://via.placeholder.com/200x200?text=No+Image',
+            }}
+            onLoad={() => console.log('✅ Image loaded successfully')}
+            onError={(e) => console.log('❌ Image loading error:', e.error)}
           />
 
           <TouchableOpacity
@@ -116,7 +121,6 @@ const styles = StyleSheet.create({
     borderRadius: 100,
     width: '100%',
     height: '100%',
-    backgroundColor: '#0553',
   },
   changeButton: {
     position: 'absolute',

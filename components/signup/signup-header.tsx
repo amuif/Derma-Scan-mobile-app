@@ -19,7 +19,6 @@ const SignUpHeader = () => {
           Skin health insights powered by AI
         </ThemedText>
       </ThemedView>
-
     </ThemedView>
   );
 };
@@ -33,7 +32,7 @@ const styles = StyleSheet.create({
   content: {
     alignItems: 'center',
     marginBottom: 8,
-    opacity:2
+    opacity: 2,
   },
   logoContainer: {
     marginBottom: 20,
@@ -70,7 +69,6 @@ const styles = StyleSheet.create({
     maxWidth: 300,
     lineHeight: 24,
   },
-
 });
 
 export default SignUpHeader;

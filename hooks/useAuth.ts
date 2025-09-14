@@ -2,7 +2,6 @@ import { authApi, authStorage } from '@/lib/auth';
 import { useAuthStore } from '@/stores/auth';
 import { User } from '@/types/user';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { router } from 'expo-router';
 import { useRouter } from 'expo-router';
 
 export const useTokenQuery = () => {
@@ -23,6 +22,7 @@ export const useUserQuery = () => {
     enabled: !!tokenQuery.data,
   });
 };
+
 export const useCurrentUserQuery = () => {
   const tokenQuery = useTokenQuery();
 
@@ -54,6 +54,7 @@ export const useLoginMutation = () => {
     },
   });
 };
+
 export const useUpdateCurrentUser = () => {
   const { setUser, user } = useAuthStore();
   return useMutation({
@@ -81,6 +82,7 @@ export const useUpdateCurrentUser = () => {
 
 export const useRegisterMutation = () => {
   const queryClient = useQueryClient();
+  const router = useRouter();
 
   return useMutation({
     mutationFn: ({
@@ -129,6 +131,7 @@ export const useLogoutMutation = () => {
     },
   });
 };
+
 export const useDeleteMutation = () => {
   const queryClient = useQueryClient();
   const router = useRouter();
@@ -147,6 +150,21 @@ export const useDeleteMutation = () => {
       console.error('Delete Current user error', error);
       await authStorage.clearAuth();
       queryClient.removeQueries({ queryKey: authQueryKeys.all });
+    },
+  });
+};
+
+export const useImageUploadMutation = () => {
+  return useMutation({
+    mutationFn: async (formData: FormData) => {
+      const token = await authStorage.getToken();
+      return authApi.uploadImage(token!, formData);
+    },
+    onSuccess: async () => {
+      console.log('uploaded successfully!');
+    },
+    onError: async (error) => {
+      console.error('Error uploading image', error);
     },
   });
 };

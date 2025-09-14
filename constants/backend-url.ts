@@ -5,7 +5,7 @@ export const getBackendUrl = () => {
     console.log(Platform.OS);
     // Development - connect to local machine
     if (Platform.OS === 'android') {
-      return 'http://10.210.144.247:4000/api'; // Android emulator
+      return 'http://10.210.144.83:4000/api'; // Android emulator
     } else {
       return 'http://localhost:4000/api'; // iOS simulator
     }

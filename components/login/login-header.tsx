@@ -19,7 +19,6 @@ const LoginHeader = () => {
           Sign in to continue your skin health journey
         </ThemedText>
       </ThemedView>
-
     </ThemedView>
   );
 };

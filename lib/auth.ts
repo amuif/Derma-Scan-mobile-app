@@ -1,6 +1,7 @@
 import { User } from '@/types/user';
 import * as SecureStore from 'expo-secure-store';
 import { BACKEND_URL } from '@/constants/backend-url';
+import axios, { isAxiosError } from 'axios';
 
 export const authStorage = {
   getToken: async (): Promise<string | null> => {
@@ -108,8 +109,6 @@ export const authApi = {
     data: Partial<User>,
     token: string,
   ): Promise<{ user: User }> => {
-    console.log(id);
-    console.log(data);
     const formData = new FormData();
     if (data.id) formData.append('id', String(data.id));
     if (data.name) formData.append('name', data.name);
@@ -139,6 +138,7 @@ export const authApi = {
 
     return response.json();
   },
+
   deleteCurrentUser: async (id: string, token: string): Promise<void> => {
     const response = await fetch(`${BACKEND_URL}/auth/${id}`, {
       method: 'DELETE',
@@ -153,5 +153,23 @@ export const authApi = {
     }
 
     return response.json();
+  },
+
+  uploadImage: async (token: string, formData: FormData) => {
+    try {
+      const response = await axios.post(
+        `${BACKEND_URL}/models/image`,
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data',
+          },
+        },
+      );
+      return response.data;
+    } catch (error) {
+      console.error('Error at uplading image', error);
+    }
   },
 };

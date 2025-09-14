@@ -188,8 +188,8 @@ const SignInForm = () => {
 
       <View style={styles.signUpContainer}>
         <ThemedText>Already have an account? </ThemedText>
-        <Link href="/login" style={styles.signUpLink}>
-          <ThemedText style={styles.signUpLink}>Sign in</ThemedText>
+        <Link href="/login" style={styles.signUpContainer}>
+          <ThemedText style={styles.signupLink}>Sign in</ThemedText>
         </Link>
       </View>
     </View>
@@ -263,12 +263,12 @@ const styles = StyleSheet.create({
   signUpContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
+    alignContent: 'center',
     gap: 3,
-    marginTop: 10,
   },
-  signUpLink: {
-    textDecorationColor: '#3b82f6',
-    fontWeight: 'bold',
+  signupLink: {
+    color: '#3b82f6',
+    fontWeight: '600',
   },
 });
 

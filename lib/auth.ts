@@ -1,7 +1,7 @@
 import { User } from '@/types/user';
 import * as SecureStore from 'expo-secure-store';
 import { BACKEND_URL } from '@/constants/backend-url';
-import axios, { isAxiosError } from 'axios';
+import { Platform } from 'react-native';
 
 export const authStorage = {
   getToken: async (): Promise<string | null> => {
@@ -155,21 +155,36 @@ export const authApi = {
     return response.json();
   },
 
-  uploadImage: async (token: string, formData: FormData) => {
+  uploadImage: async (token: string, base64: string, symptoms: string) => {
+    const form = new FormData();
+
+    form.append('file', {
+      uri:
+        Platform.OS === 'android' ? `data:image/jpeg;base64,${base64}` : base64,
+      name: 'lesion.jpg',
+      type: 'image/jpeg',
+    } as any);
+    form.append('symptoms', symptoms);
+
     try {
-      const response = await axios.post(
-        `${BACKEND_URL}/models/image`,
-        formData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'multipart/form-data',
-          },
+      const response = await fetch(`${BACKEND_URL}/models/image`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
         },
-      );
-      return response.data;
+        body: JSON.stringify({
+          image: base64,
+          symptoms: symptoms,
+        }),
+      });
+
+      const result = await response.json();
+      console.log(result);
+      return result;
     } catch (error) {
-      console.error('Error at uplading image', error);
+      console.error('Error uploading image', error);
+      throw error;
     }
   },
 };

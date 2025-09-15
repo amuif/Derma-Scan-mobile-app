@@ -4,6 +4,10 @@ import { User } from '@/types/user';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 
+interface UploadVariables {
+  base64: string;
+  symptoms: string;
+}
 export const useTokenQuery = () => {
   return useQuery({
     queryKey: authQueryKeys.token(),
@@ -156,18 +160,19 @@ export const useDeleteMutation = () => {
 
 export const useImageUploadMutation = () => {
   return useMutation({
-    mutationFn: async (formData: FormData) => {
+    mutationFn: async ({ base64, symptoms }: UploadVariables) => {
       const token = await authStorage.getToken();
-      return authApi.uploadImage(token!, formData);
+      return authApi.uploadImage(token!, base64, symptoms);
     },
-    onSuccess: async () => {
+    onSuccess: () => {
       console.log('uploaded successfully!');
     },
-    onError: async (error) => {
+    onError: (error) => {
       console.error('Error uploading image', error);
     },
   });
 };
+
 export const authQueryKeys = {
   all: ['auth'] as const,
   user: () => [...authQueryKeys.all, 'user'] as const,

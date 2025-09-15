@@ -15,17 +15,22 @@ import { useImageUploadMutation } from '@/hooks/useAuth';
 import { ThemedView } from '../ThemedView';
 import * as ImagePicker from 'expo-image-picker';
 import { CameraType, useCameraPermissions } from 'expo-camera';
+import * as ImageManipulator from 'expo-image-manipulator';
+import * as LegacyFileSystem from 'expo-file-system/legacy';
 
 interface PredictionResult {
-  label: string;
-  score: number;
+  conditions: string[];
+  confidence: number;
+  risk: 'low' | 'medium' | 'high';
+  symptomNote: string;
+  timestamp: string;
 }
 
 const SkinLesionUploadScreen: React.FC = () => {
   const [selectedImage, setSelectedImage] =
     useState<ImagePicker.ImagePickerAsset | null>(null);
   const [uploading, setUploading] = useState<boolean>(false);
-  const [results, setResults] = useState<PredictionResult[] | null>(null);
+  const [results, setResults] = useState<PredictionResult | null>(null);
   const [facing, setFacing] = useState<CameraType>('back');
   const [permission, requestPermission] = useCameraPermissions();
   const { mutateAsync: upload } = useImageUploadMutation();
@@ -71,29 +76,21 @@ const SkinLesionUploadScreen: React.FC = () => {
       return;
     }
 
+    const { uri } = selectedImage;
+    if (!(await checkImageQuality(uri))) return;
+    console.log('check passed');
+
+    const base64 = await LegacyFileSystem.readAsStringAsync(uri, {
+      encoding: 'base64',
+    });
+
+    const symptoms = 'itching, redness';
     setUploading(true);
+    console.log(symptoms);
     try {
-      const uriParts = selectedImage.uri.split('.');
-      const fileType = uriParts[uriParts.length - 1];
-
-      const formData = new FormData();
-      formData.append('file', {
-        uri: selectedImage.uri,
-        name: selectedImage.fileName ?? 'upload',
-        type: `image/${fileType}`,
-      } as any);
-
-      formData.append('additionalInformation', 'testing');
-
-      const data = await upload(formData);
-      console.log(data);
-
-      // if (data.success) {
-      //   setResults(data.predictions);
-      // } else {
-      //   Alert.alert('Upload Failed', data.error || 'Failed to analyze image');
-      // }
-      //
+      const data = await upload({ base64, symptoms });
+      console.log('results', data);
+      setResults(data);
     } catch (error) {
       console.error('Upload error:', error);
       Alert.alert(
@@ -193,14 +190,21 @@ const SkinLesionUploadScreen: React.FC = () => {
       {results && (
         <View style={styles.resultsContainer}>
           <Text style={styles.resultsTitle}>Analysis Results</Text>
-          {results.map((result, index) => (
-            <View key={index} style={styles.resultItem}>
-              <Text style={styles.resultLabel}>{result.label}</Text>
-              <Text style={styles.resultScore}>
-                {Math.round(result.score * 100)}% confidence
-              </Text>
-            </View>
-          ))}
+          <Text style={styles.resultLabel}>
+            Conditions: {results.conditions.join(', ')}
+          </Text>
+          <Text style={styles.resultScore}>
+            Confidence: {Math.round(results.confidence * 100)}%
+          </Text>
+          <Text style={styles.resultRisk}>
+            Risk Level: {results.risk.toUpperCase()}
+          </Text>
+          {results.symptomNote ? (
+            <Text style={styles.resultNote}>Note: {results.symptomNote}</Text>
+          ) : null}
+          <Text style={styles.resultTimestamp}>
+            {new Date(results.timestamp).toLocaleString()}
+          </Text>
         </View>
       )}
 
@@ -367,6 +371,24 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#007AFF',
   },
+  resultRisk: {
+    fontSize: 16,
+    color: '#FF3B30', // red for emphasis
+    fontWeight: '600',
+    marginTop: 5,
+  },
+  resultNote: {
+    fontSize: 14,
+    color: '#666',
+    marginTop: 5,
+  },
+  resultTimestamp: {
+    fontSize: 12,
+    color: '#aaa',
+    marginTop: 10,
+    textAlign: 'center',
+  },
+
   tipsContainer: {
     width: '100%',
     borderRadius: 12,
@@ -392,3 +414,14 @@ const styles = StyleSheet.create({
 });
 
 export default SkinLesionUploadScreen;
+async function checkImageQuality(uri: string) {
+  // Basic quality check (extend with OpenCV.js if needed)
+  const { width, height } = await ImageManipulator.manipulateAsync(uri, [], {
+    format: ImageManipulator.SaveFormat.JPEG,
+  });
+  if (width < 224 || height < 224) {
+    alert('Image resolution too low. Please use a higher-quality photo.');
+    return false;
+  }
+  return true;
+}

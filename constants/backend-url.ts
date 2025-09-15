@@ -1,23 +1,22 @@
-import { Platform } from 'react-native';
+import Constants from 'expo-constants';
 
 export const getBackendUrl = () => {
   if (__DEV__) {
-    console.log(Platform.OS);
-    // Development - connect to local machine
-    if (Platform.OS === 'android') {
-      return 'http://10.210.144.83:4000/api'; // Android emulator
-    } else {
-      return 'http://localhost:4000/api'; // iOS simulator
+    // Get the IP automatically from Expo
+    const debuggerHost =
+      Constants.manifest?.debuggerHost ||
+      Constants.manifest2?.extra?.expoGo?.debuggerHost;
+
+    if (debuggerHost) {
+      const hostname = debuggerHost.split(':')[0];
+      return `http://${hostname}:4000/api`;
     }
+
+    // Fallback to your known IP
+    return 'http://10.216.60.83:4000/api';
   } else {
-    // Production - use your deployed backend
     return 'https://derma-scan-backend-h0vm.onrender.com/api';
   }
 };
 
 export const BACKEND_URL = getBackendUrl();
-
-export const BACKEND_BASE =
-  __DEV__ && Platform.OS === 'android'
-    ? 'http://10.210.144.247:4000'
-    : 'http://localhost:4000';

@@ -17,6 +17,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { CameraType, useCameraPermissions } from 'expo-camera';
 import * as ImageManipulator from 'expo-image-manipulator';
 import * as LegacyFileSystem from 'expo-file-system/legacy';
+import { ThemedText } from '../ThemedText';
 
 interface PredictionResult {
   conditions: string[];
@@ -129,7 +130,12 @@ const SkinLesionUploadScreen: React.FC = () => {
           onPress={takePhoto}
           disabled={uploading}
         >
-          <Icon name="camera-alt" size={20} color="#fff" style={styles.buttonIcon} />
+          <Icon
+            name="camera-alt"
+            size={20}
+            color="#fff"
+            style={styles.buttonIcon}
+          />
           <Text style={styles.buttonText}>Take Photo</Text>
         </TouchableOpacity>
 
@@ -138,7 +144,12 @@ const SkinLesionUploadScreen: React.FC = () => {
           onPress={selectFromGallery}
           disabled={uploading}
         >
-          <Icon name="photo-library" size={20} color="#fff" style={styles.buttonIcon} />
+          <Icon
+            name="photo-library"
+            size={20}
+            color="#fff"
+            style={styles.buttonIcon}
+          />
           <Text style={styles.buttonText}>Choose from Gallery</Text>
         </TouchableOpacity>
       </View>
@@ -157,7 +168,12 @@ const SkinLesionUploadScreen: React.FC = () => {
             <ActivityIndicator color="#fff" />
           ) : (
             <>
-              <Icon name="cloud-upload" size={20} color="#fff" style={styles.buttonIcon} />
+              <Icon
+                name="cloud-upload"
+                size={20}
+                color="#fff"
+                style={styles.buttonIcon}
+              />
               <Text style={styles.buttonText}>Analyze Image</Text>
             </>
           )}
@@ -165,16 +181,18 @@ const SkinLesionUploadScreen: React.FC = () => {
       )}
 
       {results && (
-        <View style={styles.resultsContainer}>
-          <Text style={styles.resultsTitle}>Analysis Results</Text>
+        <ThemedView style={styles.resultsContainer}>
+          <ThemedText style={styles.resultsTitle}>Analysis Results</ThemedText>
 
-          <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginBottom: 10 }}>
+          <ThemedView
+            style={{ flexDirection: 'row', flexWrap: 'wrap', marginBottom: 10 }}
+          >
             {results.conditions.map((c, idx) => (
-              <Text key={idx} style={styles.conditionBadge}>
+              <ThemedText key={idx} style={styles.conditionBadge}>
                 {c}
-              </Text>
+              </ThemedText>
             ))}
-          </View>
+          </ThemedView>
 
           <Text style={styles.resultScore}>
             Confidence: {Math.round(results.confidence * 100)}%
@@ -197,7 +215,7 @@ const SkinLesionUploadScreen: React.FC = () => {
           <Text style={styles.resultTimestamp}>
             {new Date(results.timestamp).toLocaleString()}
           </Text>
-        </View>
+        </ThemedView>
       )}
 
       {!selectedImage && (
@@ -317,7 +335,6 @@ const styles = StyleSheet.create({
 
   resultsContainer: {
     width: '100%',
-    backgroundColor: '#fff',
     borderRadius: 16,
     padding: 20,
     marginTop: 20,
@@ -394,4 +411,3 @@ async function checkImageQuality(uri: string) {
   }
   return true;
 }
-

@@ -159,10 +159,11 @@ export const useDeleteMutation = () => {
 };
 
 export const useImageUploadMutation = () => {
+  const { user } = useAuthStore();
   return useMutation({
     mutationFn: async ({ base64, symptoms }: UploadVariables) => {
       const token = await authStorage.getToken();
-      return authApi.uploadImage(token!, base64, symptoms);
+      return authApi.uploadImage(token!, base64, user?.id!, symptoms);
     },
     onSuccess: () => {
       console.log('uploaded successfully!');

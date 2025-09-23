@@ -1,6 +1,6 @@
 import { User } from '@/types/user';
 import * as SecureStore from 'expo-secure-store';
-import { BACKEND_URL } from '@/constants/backend-url';
+import { API_URL } from '@/constants/backend-url';
 import { Platform } from 'react-native';
 
 export const authStorage = {
@@ -50,7 +50,7 @@ export const authApi = {
     email: string,
     password: string,
   ): Promise<{ user: User; accessToken: string }> => {
-    const response = await fetch(`${BACKEND_URL}/auth/login`, {
+    const response = await fetch(`${API_URL}/auth/login`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -71,7 +71,7 @@ export const authApi = {
     name: string,
     profilePicture?: string,
   ) => {
-    const response = await fetch(`${BACKEND_URL}/auth/signup`, {
+    const response = await fetch(`${API_URL}/auth/signup`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -91,7 +91,7 @@ export const authApi = {
   },
 
   getCurrentUser: async (token: string) => {
-    const response = await fetch(`${BACKEND_URL}/auth/me`, {
+    const response = await fetch(`${API_URL}/auth/me`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -124,7 +124,7 @@ export const authApi = {
         type: `image/${fileType}`,
       } as any);
     }
-    const response = await fetch(`${BACKEND_URL}/auth/${id}`, {
+    const response = await fetch(`${API_URL}/auth/${id}`, {
       method: 'PATCH',
       headers: {
         Authorization: `Bearer ${token}`,
@@ -140,7 +140,7 @@ export const authApi = {
   },
 
   deleteCurrentUser: async (id: string, token: string): Promise<void> => {
-    const response = await fetch(`${BACKEND_URL}/auth/${id}`, {
+    const response = await fetch(`${API_URL}/auth/${id}`, {
       method: 'DELETE',
       headers: {
         Authorization: `Bearer ${token}`,
@@ -155,19 +155,29 @@ export const authApi = {
     return response.json();
   },
 
-  uploadImage: async (token: string, base64: string, symptoms: string) => {
+  uploadImage: async (
+    token: string,
+    base64: string,
+    userId: string,
+    symptoms?: string,
+  ) => {
     const form = new FormData();
 
+    console.log('userId', userId);
     form.append('file', {
       uri:
         Platform.OS === 'android' ? `data:image/jpeg;base64,${base64}` : base64,
       name: 'lesion.jpg',
       type: 'image/jpeg',
     } as any);
-    form.append('symptoms', symptoms);
+    form.append('userId', userId);
+
+    if (symptoms) {
+      form.append('symptoms', symptoms);
+    }
 
     try {
-      const response = await fetch(`${BACKEND_URL}/models/image`, {
+      const response = await fetch(`${API_URL}/models/image`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -175,6 +185,7 @@ export const authApi = {
         },
         body: JSON.stringify({
           image: base64,
+          userId: userId,
           symptoms: symptoms,
         }),
       });

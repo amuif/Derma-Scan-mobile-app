@@ -1,11 +1,11 @@
-import { authApi, authStorage } from '@/lib/auth';
+import { authApi, authStorage, scanApi } from '@/lib/auth';
 import { useAuthStore } from '@/stores/auth';
 import { User } from '@/types/user';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 
 interface UploadVariables {
-  base64: string;
+  uri: string;
   symptoms: string;
 }
 export const useTokenQuery = () => {
@@ -161,9 +161,9 @@ export const useDeleteMutation = () => {
 export const useImageUploadMutation = () => {
   const { user } = useAuthStore();
   return useMutation({
-    mutationFn: async ({ base64, symptoms }: UploadVariables) => {
+    mutationFn: async ({ uri, symptoms }: UploadVariables) => {
       const token = await authStorage.getToken();
-      return authApi.uploadImage(token!, base64, user?.id!, symptoms);
+      return scanApi.uploadImage(token!, uri, user?.id!, symptoms);
     },
     onSuccess: () => {
       console.log('uploaded successfully!');

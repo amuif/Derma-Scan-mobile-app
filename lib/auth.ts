@@ -2,6 +2,7 @@ import { User } from '@/types/user';
 import * as SecureStore from 'expo-secure-store';
 import { API_URL } from '@/constants/backend-url';
 import { Platform } from 'react-native';
+import { ScanHistory } from '@/types/scan';
 
 export const authStorage = {
   getToken: async (): Promise<string | null> => {
@@ -154,40 +155,37 @@ export const authApi = {
 
     return response.json();
   },
-
+};
+export const scanApi = {
   uploadImage: async (
     token: string,
-    base64: string,
+    uri: string,
     userId: string,
     symptoms?: string,
   ) => {
     const form = new FormData();
 
     console.log('userId', userId);
+
     form.append('file', {
-      uri:
-        Platform.OS === 'android' ? `data:image/jpeg;base64,${base64}` : base64,
+      uri: Platform.OS === 'android' ? uri : uri.replace('file://', ''),
       name: 'lesion.jpg',
       type: 'image/jpeg',
     } as any);
+
     form.append('userId', userId);
 
     if (symptoms) {
       form.append('symptoms', symptoms);
     }
-
     try {
       const response = await fetch(`${API_URL}/models/image`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
+          // 'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          image: base64,
-          userId: userId,
-          symptoms: symptoms,
-        }),
+        body: form,
       });
 
       const result = await response.json();
@@ -196,6 +194,23 @@ export const authApi = {
     } catch (error) {
       console.error('Error uploading image', error);
       throw error;
+    }
+  },
+
+  scanHistory: async (token: string) => {
+    try {
+      const response = await fetch(`${API_URL}/models/history`, {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const result = (await response.json()) as ScanHistory[];
+      console.log(result)
+      return result;
+    } catch (error) {
+      console.log('Error fetching scan history', error);
     }
   },
 };

@@ -7,7 +7,7 @@ import { IconPencil } from '@tabler/icons-react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { useEffect, useState } from 'react';
 import { useUpdateCurrentUser } from '@/hooks/useAuth';
-import { FILES_URL} from '@/constants/backend-url';
+import { FILES_URL } from '@/constants/backend-url';
 
 export default function ProfileHeader() {
   const { user } = useAuthStore();

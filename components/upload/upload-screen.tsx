@@ -8,15 +8,13 @@ import {
   ActivityIndicator,
   Alert,
   ScrollView,
-  Button,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useImageUploadMutation } from '@/hooks/useAuth';
 import { ThemedView } from '../ThemedView';
 import * as ImagePicker from 'expo-image-picker';
-import { CameraType, useCameraPermissions } from 'expo-camera';
+import { useCameraPermissions } from 'expo-camera';
 import * as ImageManipulator from 'expo-image-manipulator';
-import * as LegacyFileSystem from 'expo-file-system/legacy';
 import { ThemedText } from '../ThemedText';
 
 interface PredictionResult {
@@ -32,27 +30,32 @@ const SkinLesionUploadScreen: React.FC = () => {
     useState<ImagePicker.ImagePickerAsset | null>(null);
   const [uploading, setUploading] = useState<boolean>(false);
   const [results, setResults] = useState<PredictionResult | null>(null);
-  const [facing, setFacing] = useState<CameraType>('back');
   const [permission, requestPermission] = useCameraPermissions();
   const { mutateAsync: upload } = useImageUploadMutation();
 
   const takePhoto = async () => {
-    if (!permission) return;
-    if (!permission.granted) {
-      return (
-        <View style={styles.container}>
-          <Text style={styles.title}>
-            We need your permission to show the camera
-          </Text>
-          <Button onPress={requestPermission} title="Grant Permission" />
-        </View>
-      );
+    // Request camera permission if not granted
+    if (!permission || !permission.granted) {
+      const { status } = await requestPermission();
+      if (status !== 'granted') {
+        Alert.alert(
+          'Permission required',
+          'Camera access is required to take photos.',
+        );
+        return;
+      }
+    }
+
+    const result = await ImagePicker.launchCameraAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      quality: 1,
+    });
+
+    if (!result.canceled) {
+      const image = result.assets[0];
+      setSelectedImage(image!);
     }
   };
-
-  function toggleCameraFacing() {
-    setFacing((current) => (current === 'back' ? 'front' : 'back'));
-  }
 
   const selectFromGallery = async (): Promise<void> => {
     let result = await ImagePicker.launchImageLibraryAsync({
@@ -67,22 +70,20 @@ const SkinLesionUploadScreen: React.FC = () => {
   };
 
   const uploadImage = async (): Promise<void> => {
+    if (uploading) {
+      return;
+    }
     if (!selectedImage) {
       Alert.alert('No Image', 'Please select an image first');
       return;
     }
-
     const { uri } = selectedImage;
     if (!(await checkImageQuality(uri))) return;
-
-    const base64 = await LegacyFileSystem.readAsStringAsync(uri, {
-      encoding: 'base64',
-    });
 
     const symptoms = 'itching, redness';
     setUploading(true);
     try {
-      const data = await upload({ base64, symptoms });
+      const data = await upload({ uri, symptoms });
       setResults(data);
     } catch (error) {
       console.error('Upload error:', error);

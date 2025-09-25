@@ -1,10 +1,10 @@
-import { ThemedText } from '@/components/ThemedText';
+import CommunityHeader from '@/components/community/community-header';
 import { ThemedView } from '@/components/ThemedView';
 
 export const Community = () => {
   return (
     <ThemedView>
-      <ThemedText>Community tab</ThemedText>
+      <CommunityHeader/>
     </ThemedView>
   );
 };

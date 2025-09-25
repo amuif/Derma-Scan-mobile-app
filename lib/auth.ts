@@ -207,7 +207,7 @@ export const scanApi = {
       });
 
       const result = (await response.json()) as ScanHistory[];
-      console.log(result)
+      console.log(result);
       return result;
     } catch (error) {
       console.log('Error fetching scan history', error);

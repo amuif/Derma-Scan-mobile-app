@@ -28,12 +28,14 @@ export const useUserQuery = () => {
 };
 
 export const useCurrentUserQuery = () => {
-  const tokenQuery = useTokenQuery();
-
   return useQuery({
     queryKey: authQueryKeys.currentUser(),
-    queryFn: () => authApi.getCurrentUser(tokenQuery.data!),
-    enabled: !!tokenQuery.data,
+    queryFn: async () => {
+      const token = await authStorage.getToken();
+      const user = await authStorage.getUser();
+      if (!token || !user) return;
+      return authApi.getCurrentUser(token, user.id);
+    },
     staleTime: 5 * 60 * 1000,
   });
 };

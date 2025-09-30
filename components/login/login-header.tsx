@@ -1,7 +1,7 @@
 import { StyleSheet } from 'react-native';
 import { ThemedText } from '../ThemedText';
 import { ThemedView } from '../ThemedView';
-import { IconMicroscope } from '@tabler/icons-react-native';
+import { IconActivity } from '@tabler/icons-react-native';
 
 const LoginHeader = () => {
   return (
@@ -9,7 +9,7 @@ const LoginHeader = () => {
       <ThemedView style={styles.content}>
         <ThemedView style={styles.logoContainer}>
           <ThemedView style={styles.logoCircle}>
-            <IconMicroscope size={32} color="#3b82f6" />
+            <IconActivity size={32} color="#fff" />
           </ThemedView>
         </ThemedView>
 
@@ -40,8 +40,8 @@ const styles = StyleSheet.create({
   logoCircle: {
     width: 80,
     height: 80,
-    borderRadius: 40,
-    backgroundColor: '#e0e7ff',
+    borderRadius: 15,
+    backgroundColor: '#3b82f6',
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#3b82f6',

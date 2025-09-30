@@ -1,23 +1,22 @@
 import { ThemedView } from '../ThemedView';
 import { ThemedText } from '../ThemedText';
-import { StyleSheet, TouchableOpacity } from 'react-native';
+import { StyleSheet, TouchableOpacity, Text } from 'react-native';
 import { Image } from 'expo-image';
-import { useAuthStore } from '@/stores/auth';
 import { IconPencil } from '@tabler/icons-react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { useEffect, useState } from 'react';
-import { useUpdateCurrentUser } from '@/hooks/useAuth';
+import { useCurrentUserQuery, useUpdateCurrentUser } from '@/hooks/useAuth';
 import { FILES_URL } from '@/constants/backend-url';
 
 export default function ProfileHeader() {
-  const { user } = useAuthStore();
+  const { data: user, isLoading, isError } = useCurrentUserQuery();
   const { mutateAsync: updateUser } = useUpdateCurrentUser();
   const [profilePicturePreview, setProfilePicturePreview] = useState(
     user?.profilePicture,
   );
 
   useEffect(() => {
-    if (user?.profilePicture) {
+    if (user && user?.profilePicture) {
       setProfilePicturePreview(user.profilePicture);
     }
   }, [user]);
@@ -39,14 +38,28 @@ export default function ProfileHeader() {
       console.log('Error picking image:', error);
     }
   };
+  const getInitials = (name: string) => {
+    if (!name) return '?';
+    const parts = name.trim().split(' ');
+    if (parts.length === 1) return parts[0][0].toUpperCase();
+    return (parts[0][0] + parts[1][0]).toUpperCase();
+  };
 
-  // Construct the full image URL
-  const fullImageUrl = profilePicturePreview
-    ? `${FILES_URL}${profilePicturePreview}`
-    : null;
-
+  const fullImageUrl =
+    profilePicturePreview?.startsWith('http') ||
+    profilePicturePreview?.startsWith('file')
+      ? profilePicturePreview
+      : profilePicturePreview
+        ? `${FILES_URL}${profilePicturePreview}`
+        : null;
   console.log('Rendering with image URL:', fullImageUrl);
 
+  if (isLoading) {
+    return <Text>Loading..............</Text>;
+  }
+  if (isError) {
+    return <Text>Error occurred check your console</Text>;
+  }
   return (
     user && (
       <ThemedView className="pt-5 flex-col gap-4">
@@ -55,17 +68,20 @@ export default function ProfileHeader() {
         </ThemedText>
 
         <ThemedView style={styles.imageContainer}>
-          <Image
-            style={styles.image}
-            source={{
-              uri:
-                fullImageUrl ||
-                'https://via.placeholder.com/200x200?text=No+Image',
-            }}
-            onLoad={() => console.log('✅ Image loaded successfully')}
-            onError={(e) => console.log('❌ Image loading error:', e.error)}
-          />
-
+          {fullImageUrl ? (
+            <Image
+              style={styles.image}
+              source={{ uri: fullImageUrl }}
+              onLoad={() => console.log('✅ Image loaded successfully')}
+              onError={(e) => console.log('❌ Image loading error:', e.error)}
+            />
+          ) : (
+            <ThemedView style={[styles.image, styles.initialsContainer]}>
+              <ThemedText style={styles.initials}>
+                {getInitials(user.name)}
+              </ThemedText>
+            </ThemedView>
+          )}{' '}
           <TouchableOpacity
             style={styles.changeButton}
             onPress={pickImage}
@@ -121,6 +137,16 @@ const styles = StyleSheet.create({
     borderRadius: 100,
     width: '100%',
     height: '100%',
+  },
+  initialsContainer: {
+    backgroundColor: '#ccc',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  initials: {
+    fontSize: 64,
+    fontWeight: 'bold',
+    color: 'white',
   },
   changeButton: {
     position: 'absolute',

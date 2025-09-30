@@ -2,7 +2,7 @@ import { User } from '@/types/user';
 import * as SecureStore from 'expo-secure-store';
 import { API_URL } from '@/constants/backend-url';
 import { Platform } from 'react-native';
-import { ScanHistory } from '@/types/scan';
+import { Scan } from '@/types/scan';
 
 export const authStorage = {
   getToken: async (): Promise<string | null> => {
@@ -91,8 +91,8 @@ export const authApi = {
     return await authStorage.clearAuth();
   },
 
-  getCurrentUser: async (token: string) => {
-    const response = await fetch(`${API_URL}/auth/me`, {
+  getCurrentUser: async (token: string, id: string) => {
+    const response = await fetch(`${API_URL}/auth/${id}`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -102,7 +102,7 @@ export const authApi = {
       throw new Error('Failed to fetch user');
     }
 
-    return response.json();
+    return response.json() as unknown as User;
   },
 
   updateCurrentUser: async (
@@ -206,7 +206,7 @@ export const scanApi = {
         },
       });
 
-      const result = (await response.json()) as ScanHistory[];
+      const result = (await response.json()) as Scan[];
       console.log(result);
       return result;
     } catch (error) {

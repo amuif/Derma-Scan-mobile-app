@@ -1,4 +1,3 @@
-import { useAuthStore } from '@/stores/auth';
 import { useEffect, useState } from 'react';
 import { ThemedView } from '../ThemedView';
 import { ThemedText } from '../ThemedText';
@@ -10,13 +9,13 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useUpdateCurrentUser } from '@/hooks/useAuth';
+import { useCurrentUserQuery, useUpdateCurrentUser } from '@/hooks/useAuth';
+import { authStorage } from '@/lib/auth';
 
 export default function ProfileData() {
-  const { user, setUser } = useAuthStore();
+  const { data: user, isLoading } = useCurrentUserQuery();
   const { mutateAsync: updateUser } = useUpdateCurrentUser();
   const [isEditing, setIsEditing] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -50,22 +49,15 @@ export default function ProfileData() {
       return;
     }
 
-    setIsLoading(true);
-
     try {
       const response = updateUser(formData);
-      // Update user data in the store (and eventually backend)
-      setUser((await response).user);
-
-      // In a real app, you would make an API call here
-      // await api.updateUser(user.id, formData);
+      await authStorage.setUser((await response).user);
 
       setIsEditing(false);
       Alert.alert('Success', 'Your profile has been updated');
     } catch (error) {
       Alert.alert('Error', 'Failed to update profile. Please try again.');
-    } finally {
-      setIsLoading(false);
+      console.log(error);
     }
   };
 
@@ -135,7 +127,6 @@ export default function ProfileData() {
         </ThemedView>
 
         <ThemedView style={styles.fieldsContainer}>
-          {/* Name Field */}
           <ThemedView style={styles.field}>
             <ThemedView style={styles.fieldHeader}>
               <Ionicons name="person-outline" size={16} color="#6b7280" />

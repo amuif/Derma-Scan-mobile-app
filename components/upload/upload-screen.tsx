@@ -34,7 +34,6 @@ const SkinLesionUploadScreen: React.FC = () => {
   const { mutateAsync: upload } = useImageUploadMutation();
 
   const takePhoto = async () => {
-    // Request camera permission if not granted
     if (!permission || !permission.granted) {
       const { status } = await requestPermission();
       if (status !== 'granted') {
@@ -77,13 +76,15 @@ const SkinLesionUploadScreen: React.FC = () => {
       Alert.alert('No Image', 'Please select an image first');
       return;
     }
+    setUploading(true);
+
     const { uri } = selectedImage;
     if (!(await checkImageQuality(uri))) return;
-
     const symptoms = 'itching, redness';
-    setUploading(true);
+
     try {
       const data = await upload({ uri, symptoms });
+      console.table(data);
       setResults(data);
     } catch (error) {
       console.error('Upload error:', error);

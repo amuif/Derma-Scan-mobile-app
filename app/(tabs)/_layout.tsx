@@ -6,7 +6,7 @@ import TabBarBackground from '@/components/ui/TabBarBackground';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { HapticTab } from '@/components/HapticTab';
-import { IconInfoCircle, IconUpload } from '@tabler/icons-react-native';
+import {  IconPlus, IconUpload } from '@tabler/icons-react-native';
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
@@ -36,7 +36,14 @@ export default function TabLayout() {
           tabBarIcon: ({ color }) => <IconUpload size={28} color={color} />,
         }}
       />
-
+      <Tabs.Screen
+        name="posts"
+        options={{
+          title: 'Posts',
+          tabBarIcon: ({ color }) => <IconPlus size={28} color={color} />,
+        }}
+      />
+ 
       <Tabs.Screen
         name="community"
         options={{
@@ -46,14 +53,7 @@ export default function TabLayout() {
           ),
         }}
       />
-      <Tabs.Screen
-        name="posts"
-        options={{
-          title: 'Posts',
-          tabBarIcon: ({ color }) => <IconInfoCircle size={28} color={color} />,
-        }}
-      />
-      <Tabs.Screen
+     <Tabs.Screen
         name="profile"
         options={{
           title: 'Profile',

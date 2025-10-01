@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   Alert,
   ScrollView,
+  TextInput,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useImageUploadMutation } from '@/hooks/useAuth';
@@ -16,7 +17,10 @@ import * as ImagePicker from 'expo-image-picker';
 import { useCameraPermissions } from 'expo-camera';
 import * as ImageManipulator from 'expo-image-manipulator';
 import { ThemedText } from '../ThemedText';
+import { useTextScan } from '@/hooks/useScan';
+import { useThemeColor } from '@/hooks/useThemeColors';
 
+// Update the interface to handle both response formats
 interface PredictionResult {
   conditions: string[];
   confidence: number;
@@ -25,13 +29,52 @@ interface PredictionResult {
   timestamp: string;
 }
 
+// New interface for text analysis response
+interface TextAnalysisResponse {
+  analysis: {
+    conditions: string[];
+    confidence: number;
+    guidance: string;
+    risk_level: 'low' | 'medium' | 'high';
+  };
+}
+
+type TabType = 'image' | 'text';
+
 const SkinLesionUploadScreen: React.FC = () => {
   const [selectedImage, setSelectedImage] =
     useState<ImagePicker.ImagePickerAsset | null>(null);
   const [uploading, setUploading] = useState<boolean>(false);
   const [results, setResults] = useState<PredictionResult | null>(null);
   const [permission, requestPermission] = useCameraPermissions();
-  const { mutateAsync: upload } = useImageUploadMutation();
+  const [activeTab, setActiveTab] = useState<TabType>('image');
+  const [symptomsText, setSymptomsText] = useState<string>('');
+  const { mutateAsync: uploadImage } = useImageUploadMutation();
+  const { mutateAsync: uploadText } = useTextScan();
+  const colors = useThemeColor();
+
+  // Helper function to transform text analysis response to match PredictionResult
+  const transformTextResponse = (data: any): PredictionResult => {
+    // Check if it's the text analysis response format
+    if (data?.analysis) {
+      return {
+        conditions: data.analysis.conditions || [],
+        confidence: data.analysis.confidence || 0,
+        risk: data.analysis.risk_level || 'low',
+        symptomNote: data.analysis.guidance || 'No specific guidance provided.',
+        timestamp: new Date().toISOString(),
+      };
+    }
+
+    // If it's already in the expected format (image response), return as is
+    return {
+      conditions: data?.conditions || [],
+      confidence: data?.confidence || 0,
+      risk: data?.risk || 'low',
+      symptomNote: data?.symptomNote || 'No specific guidance provided.',
+      timestamp: data?.timestamp || new Date().toISOString(),
+    };
+  };
 
   const takePhoto = async () => {
     if (!permission || !permission.granted) {
@@ -68,7 +111,7 @@ const SkinLesionUploadScreen: React.FC = () => {
     }
   };
 
-  const uploadImage = async (): Promise<void> => {
+  const handleImageUpload = async (): Promise<void> => {
     if (uploading) {
       return;
     }
@@ -79,13 +122,17 @@ const SkinLesionUploadScreen: React.FC = () => {
     setUploading(true);
 
     const { uri } = selectedImage;
-    if (!(await checkImageQuality(uri))) return;
-    const symptoms = 'itching, redness';
+    if (!(await checkImageQuality(uri))) {
+      setUploading(false);
+      return;
+    }
 
     try {
-      const data = await upload({ uri, symptoms });
+      const data = await uploadImage({ uri, symptoms: 'itching, redness' });
       console.table(data);
-      setResults(data);
+      // Transform the response to ensure consistent format
+      const transformedData = transformTextResponse(data);
+      setResults(transformedData);
     } catch (error) {
       console.error('Upload error:', error);
       Alert.alert(
@@ -97,38 +144,100 @@ const SkinLesionUploadScreen: React.FC = () => {
     }
   };
 
+  const handleTextUpload = async (): Promise<void> => {
+    if (uploading) {
+      return;
+    }
+    if (!symptomsText.trim()) {
+      Alert.alert('No Symptoms', 'Please describe your symptoms first');
+      return;
+    }
+    setUploading(true);
+
+    try {
+      const data = await uploadText({ symptoms: symptomsText });
+      console.log('Text upload response:', data);
+
+      // Transform the text response to match the expected format
+      const transformedData = transformTextResponse(data);
+      console.log('Transformed data:', transformedData);
+
+      setResults(transformedData);
+    } catch (error) {
+      console.error('Text upload error:', error);
+      Alert.alert(
+        'Error',
+        'Failed to analyze symptoms. Please check your connection.',
+      );
+    } finally {
+      setUploading(false);
+    }
+  };
+
   const clearSelection = (): void => {
     setSelectedImage(null);
+    setSymptomsText('');
     setResults(null);
   };
 
-  return (
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={styles.contentContainer}
-    >
-      <Text style={styles.title}>Skin Lesion Analysis</Text>
-      <Text style={styles.subtitle}>
-        Upload an image for AI-powered analysis
-      </Text>
+  // Safe rendering of conditions to handle undefined cases
+  const renderConditions = (conditions: string[] | undefined) => {
+    if (!conditions || conditions.length === 0) {
+      return (
+        <ThemedText
+          style={[styles.noConditions, { color: colors.onSurfaceMuted }]}
+        >
+          No specific conditions identified
+        </ThemedText>
+      );
+    }
 
+    return conditions.map((c, idx) => (
+      <View
+        key={idx}
+        style={[
+          styles.conditionBadgeContainer,
+          { backgroundColor: colors.conditionBadge },
+        ]}
+      >
+        <Text style={[styles.conditionBadgeText, { color: colors.primary }]}>
+          {c}
+        </Text>
+      </View>
+    ));
+  };
+
+  const renderImageTab = () => (
+    <>
       {selectedImage ? (
-        <ThemedView style={styles.imageContainer}>
+        <ThemedView
+          style={[styles.imageContainer, { shadowColor: colors.shadow }]}
+        >
           <Image source={{ uri: selectedImage.uri }} style={styles.image} />
           <TouchableOpacity style={styles.clearButton} onPress={clearSelection}>
             <Icon name="close" size={20} color="#fff" />
           </TouchableOpacity>
         </ThemedView>
       ) : (
-        <View style={styles.placeholderContainer}>
-          <Icon name="photo-camera" size={60} color="#007AFF" />
-          <Text style={styles.placeholderText}>No image selected</Text>
+        <View
+          style={[
+            styles.placeholderContainer,
+            {
+              borderColor: colors.primary,
+              backgroundColor: colors.tipsBackground,
+            },
+          ]}
+        >
+          <Icon name="photo-camera" size={60} color={colors.primary} />
+          <Text style={[styles.placeholderText, { color: colors.primary }]}>
+            No image selected
+          </Text>
         </View>
       )}
 
       <View style={styles.buttonContainer}>
         <TouchableOpacity
-          style={[styles.button, styles.cameraButton]}
+          style={[styles.button, { backgroundColor: colors.primary }]}
           onPress={takePhoto}
           disabled={uploading}
         >
@@ -142,7 +251,7 @@ const SkinLesionUploadScreen: React.FC = () => {
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.button, styles.galleryButton]}
+          style={[styles.button, { backgroundColor: colors.primary }]}
           onPress={selectFromGallery}
           disabled={uploading}
         >
@@ -159,11 +268,10 @@ const SkinLesionUploadScreen: React.FC = () => {
       {selectedImage && (
         <TouchableOpacity
           style={[
-            styles.button,
             styles.uploadButton,
-            uploading && styles.uploadButtonDisabled,
+            { backgroundColor: uploading ? colors.neutral : '#34C759' },
           ]}
-          onPress={uploadImage}
+          onPress={handleImageUpload}
           disabled={uploading}
         >
           {uploading ? (
@@ -181,59 +289,247 @@ const SkinLesionUploadScreen: React.FC = () => {
           )}
         </TouchableOpacity>
       )}
+    </>
+  );
 
+  const renderTextTab = () => (
+    <>
+      <ThemedView style={styles.textInputContainer}>
+        <TextInput
+          style={[
+            styles.textInput,
+            {
+              backgroundColor: colors.surfaceVariant,
+              color: colors.onSurface,
+              borderColor: colors.outline,
+            },
+          ]}
+          placeholder="Describe your symptoms in detail..."
+          placeholderTextColor={colors.onSurfaceMuted}
+          value={symptomsText}
+          onChangeText={setSymptomsText}
+          multiline
+          numberOfLines={6}
+          textAlignVertical="top"
+          maxLength={500}
+        />
+        <Text style={[styles.characterCount, { color: colors.onSurfaceMuted }]}>
+          {symptomsText.length}/500
+        </Text>
+      </ThemedView>
+
+      <View style={styles.textTips}>
+        <Text style={[styles.tipsTitle, { color: colors.primary }]}>
+          What to include:
+        </Text>
+        <View style={styles.tipItem}>
+          <Icon name="check-circle" size={16} color={colors.primary} />
+          <Text style={[styles.tipText, { color: colors.onSurface }]}>
+            Location of the skin issue
+          </Text>
+        </View>
+        <View style={styles.tipItem}>
+          <Icon name="check-circle" size={16} color={colors.primary} />
+          <Text style={[styles.tipText, { color: colors.onSurface }]}>
+            Appearance (color, size, shape)
+          </Text>
+        </View>
+        <View style={styles.tipItem}>
+          <Icon name="check-circle" size={16} color={colors.primary} />
+          <Text style={[styles.tipText, { color: colors.onSurface }]}>
+            Any symptoms (itching, pain, bleeding)
+          </Text>
+        </View>
+        <View style={styles.tipItem}>
+          <Icon name="check-circle" size={16} color={colors.primary} />
+          <Text style={[styles.tipText, { color: colors.onSurface }]}>
+            How long it&apos;s been there
+          </Text>
+        </View>
+      </View>
+
+      {symptomsText.trim() && (
+        <TouchableOpacity
+          style={[
+            styles.uploadButton,
+            { backgroundColor: uploading ? colors.neutral : '#34C759' },
+          ]}
+          onPress={handleTextUpload}
+          disabled={uploading}
+        >
+          {uploading ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <>
+              <Icon
+                name="text-fields"
+                size={20}
+                color="#fff"
+                style={styles.buttonIcon}
+              />
+              <Text style={styles.buttonText}>Analyze Symptoms</Text>
+            </>
+          )}
+        </TouchableOpacity>
+      )}
+    </>
+  );
+
+  return (
+    <ScrollView
+      style={[styles.container, { backgroundColor: colors.surfaceContainer }]}
+      contentContainerStyle={styles.contentContainer}
+    >
+      <Text style={[styles.title, { color: colors.primary }]}>
+        Skin Lesion Analysis
+      </Text>
+      <Text style={[styles.subtitle, { color: colors.onSurfaceVariant }]}>
+        Upload an image or describe symptoms for AI-powered analysis
+      </Text>
+
+      {/* Tab Navigation */}
+      <View
+        style={[styles.tabContainer, { backgroundColor: colors.tabBackground }]}
+      >
+        <TouchableOpacity
+          style={[
+            styles.tab,
+            activeTab === 'image' && [
+              styles.activeTab,
+              { backgroundColor: colors.primary },
+            ],
+          ]}
+          onPress={() => setActiveTab('image')}
+        >
+          <Icon
+            name="photo-camera"
+            size={20}
+            color={activeTab === 'image' ? '#fff' : colors.primary}
+          />
+          <Text
+            style={[
+              styles.tabText,
+              { color: activeTab === 'image' ? '#fff' : colors.primary },
+            ]}
+          >
+            Image Analysis
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[
+            styles.tab,
+            activeTab === 'text' && [
+              styles.activeTab,
+              { backgroundColor: colors.primary },
+            ],
+          ]}
+          onPress={() => setActiveTab('text')}
+        >
+          <Icon
+            name="text-fields"
+            size={20}
+            color={activeTab === 'text' ? '#fff' : colors.primary}
+          />
+          <Text
+            style={[
+              styles.tabText,
+              { color: activeTab === 'text' ? '#fff' : colors.primary },
+            ]}
+          >
+            Text Analysis
+          </Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Tab Content */}
+      {activeTab === 'image' ? renderImageTab() : renderTextTab()}
+
+      {/* Results Section */}
       {results && (
-        <ThemedView style={styles.resultsContainer}>
-          <ThemedText style={styles.resultsTitle}>Analysis Results</ThemedText>
+        <ThemedView
+          style={[
+            styles.resultsContainer,
+            { backgroundColor: colors.surface, shadowColor: colors.shadow },
+          ]}
+        >
+          <ThemedText style={[styles.resultsTitle, { color: colors.primary }]}>
+            Analysis Results
+          </ThemedText>
 
           <ThemedView
             style={{ flexDirection: 'row', flexWrap: 'wrap', marginBottom: 10 }}
           >
-            {results.conditions.map((c, idx) => (
-              <ThemedText key={idx} style={styles.conditionBadge}>
-                {c}
-              </ThemedText>
-            ))}
+            {renderConditions(results.conditions)}
           </ThemedView>
 
-          <Text style={styles.resultScore}>
-            Confidence: {Math.round(results.confidence * 100)}%
+          <Text style={[styles.resultScore, { color: colors.primary }]}>
+            Confidence: {Math.round(results.confidence || 0)}%
           </Text>
 
           <Text
             style={[
               styles.resultRisk,
-              results.risk === 'low' && styles.riskLow,
-              results.risk === 'medium' && styles.riskMedium,
-              results.risk === 'high' && styles.riskHigh,
+              results.risk === 'low' && [
+                styles.riskLow,
+                { backgroundColor: colors.riskLow, color: colors.success },
+              ],
+              results.risk === 'medium' && [
+                styles.riskMedium,
+                { backgroundColor: colors.riskMedium, color: colors.warning },
+              ],
+              results.risk === 'high' && [
+                styles.riskHigh,
+                { backgroundColor: colors.riskHigh, color: colors.error },
+              ],
             ]}
           >
-            {results.risk.toUpperCase()} RISK
+            {(results.risk || 'low').toUpperCase()} RISK
           </Text>
 
           {results.symptomNote && (
-            <Text style={styles.resultNote}>💡 {results.symptomNote}</Text>
+            <Text
+              style={[styles.resultNote, { color: colors.onSurfaceVariant }]}
+            >
+              💡 {results.symptomNote}
+            </Text>
           )}
-          <Text style={styles.resultTimestamp}>
-            {new Date(results.timestamp).toLocaleString()}
+          <Text
+            style={[styles.resultTimestamp, { color: colors.onSurfaceMuted }]}
+          >
+            {new Date(results.timestamp || new Date()).toLocaleString()}
           </Text>
         </ThemedView>
       )}
 
-      {!selectedImage && (
-        <ThemedView style={styles.tipsContainer}>
-          <Text style={styles.tipsTitle}>Tips for Best Results:</Text>
+      {/* Tips Section */}
+      {!selectedImage && activeTab === 'image' && (
+        <ThemedView
+          style={[
+            styles.tipsContainer,
+            { backgroundColor: colors.tipsBackground },
+          ]}
+        >
+          <Text style={[styles.tipsTitle, { color: colors.primary }]}>
+            Tips for Best Results:
+          </Text>
           <View style={styles.tipItem}>
-            <Icon name="check-circle" size={16} color="#007AFF" />
-            <Text style={styles.tipText}>Ensure good lighting</Text>
+            <Icon name="check-circle" size={16} color={colors.primary} />
+            <Text style={[styles.tipText, { color: colors.onSurface }]}>
+              Ensure good lighting
+            </Text>
           </View>
           <View style={styles.tipItem}>
-            <Icon name="check-circle" size={16} color="#007AFF" />
-            <Text style={styles.tipText}>Focus clearly on the lesion</Text>
+            <Icon name="check-circle" size={16} color={colors.primary} />
+            <Text style={[styles.tipText, { color: colors.onSurface }]}>
+              Focus clearly on the lesion
+            </Text>
           </View>
           <View style={styles.tipItem}>
-            <Icon name="check-circle" size={16} color="#007AFF" />
-            <Text style={styles.tipText}>Include some surrounding skin</Text>
+            <Icon name="check-circle" size={16} color={colors.primary} />
+            <Text style={[styles.tipText, { color: colors.onSurface }]}>
+              Include some surrounding skin
+            </Text>
           </View>
         </ThemedView>
       )}
@@ -251,22 +547,51 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#007AFF',
     marginBottom: 8,
     textAlign: 'center',
   },
   subtitle: {
     fontSize: 16,
-    color: '#666',
     marginBottom: 30,
     textAlign: 'center',
   },
+
+  // Tab Styles
+  tabContainer: {
+    flexDirection: 'row',
+    borderRadius: 25,
+    padding: 4,
+    marginBottom: 30,
+    width: '100%',
+  },
+  tab: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+  },
+  activeTab: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 3,
+  },
+  tabText: {
+    fontSize: 14,
+    fontWeight: '600',
+    marginLeft: 8,
+  },
+
+  // Image Tab Styles
   imageContainer: {
     position: 'relative',
     marginBottom: 20,
     borderRadius: 16,
     overflow: 'hidden',
-    shadowColor: '#000',
     shadowOpacity: 0.15,
     shadowRadius: 8,
     elevation: 5,
@@ -291,17 +616,14 @@ const styles = StyleSheet.create({
     width: 320,
     height: 320,
     borderWidth: 2,
-    borderColor: '#007AFF',
     borderStyle: 'dashed',
     borderRadius: 16,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 20,
-    backgroundColor: 'rgba(0,122,255,0.05)',
   },
   placeholderText: {
     marginTop: 10,
-    color: '#007AFF',
     fontSize: 16,
   },
   buttonContainer: {
@@ -320,10 +642,38 @@ const styles = StyleSheet.create({
     minWidth: 160,
     elevation: 2,
   },
-  cameraButton: { backgroundColor: '#007AFF' },
-  galleryButton: { backgroundColor: '#007AFF' },
+  buttonIcon: { marginRight: 8 },
+  buttonText: { color: '#fff', fontWeight: '600', fontSize: 16 },
+
+  // Text Tab Styles
+  textInputContainer: {
+    width: '100%',
+    marginBottom: 20,
+  },
+  textInput: {
+    width: '100%',
+    borderWidth: 1,
+    borderRadius: 12,
+    padding: 16,
+    fontSize: 16,
+    textAlignVertical: 'top',
+    minHeight: 150,
+  },
+  characterCount: {
+    fontSize: 12,
+    textAlign: 'right',
+    marginTop: 4,
+  },
+  textTips: {
+    width: '100%',
+    marginBottom: 20,
+  },
+
+  // Upload Button
   uploadButton: {
-    backgroundColor: '#34C759',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
     paddingVertical: 15,
     paddingHorizontal: 30,
     borderRadius: 25,
@@ -331,16 +681,13 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     elevation: 3,
   },
-  uploadButtonDisabled: { backgroundColor: '#ccc' },
-  buttonIcon: { marginRight: 8 },
-  buttonText: { color: '#fff', fontWeight: '600', fontSize: 16 },
 
+  // Results Styles
   resultsContainer: {
     width: '100%',
     borderRadius: 16,
     padding: 20,
     marginTop: 20,
-    shadowColor: '#000',
     shadowOpacity: 0.1,
     shadowRadius: 5,
     elevation: 3,
@@ -348,22 +695,27 @@ const styles = StyleSheet.create({
   resultsTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#007AFF',
     marginBottom: 15,
     textAlign: 'center',
   },
-  conditionBadge: {
-    backgroundColor: 'rgba(0,122,255,0.1)',
-    color: '#007AFF',
+  conditionBadgeContainer: {
     paddingVertical: 4,
     paddingHorizontal: 10,
     borderRadius: 15,
     marginRight: 8,
     marginBottom: 8,
+  },
+  conditionBadgeText: {
     fontSize: 14,
     fontWeight: '500',
   },
-  resultScore: { fontSize: 14, color: '#007AFF' },
+  noConditions: {
+    fontSize: 14,
+    fontStyle: 'italic',
+    textAlign: 'center',
+    width: '100%',
+  },
+  resultScore: { fontSize: 14 },
   resultRisk: {
     fontSize: 16,
     fontWeight: '600',
@@ -373,32 +725,30 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     alignSelf: 'flex-start',
   },
-  riskLow: { backgroundColor: 'rgba(52,199,89,0.15)', color: '#34C759' },
-  riskMedium: { backgroundColor: 'rgba(255,204,0,0.15)', color: '#FFCC00' },
-  riskHigh: { backgroundColor: 'rgba(255,59,48,0.15)', color: '#FF3B30' },
-  resultNote: { fontSize: 14, color: '#666', marginTop: 5 },
+  riskLow: {},
+  riskMedium: {},
+  riskHigh: {},
+  resultNote: { fontSize: 14, marginTop: 5 },
   resultTimestamp: {
     fontSize: 12,
-    color: '#aaa',
     marginTop: 10,
     textAlign: 'center',
   },
 
+  // Tips Styles
   tipsContainer: {
     width: '100%',
     borderRadius: 16,
     padding: 20,
     marginTop: 20,
-    backgroundColor: 'rgba(0,122,255,0.05)',
   },
   tipsTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#007AFF',
     marginBottom: 15,
   },
   tipItem: { flexDirection: 'row', alignItems: 'center', marginBottom: 10 },
-  tipText: { marginLeft: 10, fontSize: 14, color: '#444' },
+  tipText: { marginLeft: 10, fontSize: 14 },
 });
 
 export default SkinLesionUploadScreen;

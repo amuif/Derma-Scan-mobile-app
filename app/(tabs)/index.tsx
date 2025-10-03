@@ -41,7 +41,6 @@ const HomeScreen: React.FC = () => {
     refetchScans();
   };
 
-  // Get recent items (limit to 3 for preview)
   const recentPosts = posts?.slice(0, 3) || [];
   const recentScans = scans?.slice(0, 3) || [];
 
@@ -50,7 +49,7 @@ const HomeScreen: React.FC = () => {
   };
 
   const navigateToScans = () => {
-    router.push('/(tabs)/upload');
+    router.push('/history');
   };
 
   const navigateToCommunity = () => {
@@ -183,12 +182,8 @@ const HomeScreen: React.FC = () => {
               Your skin health companion
             </ThemedText>
           </View>
-          <View style={[styles.avatar, { backgroundColor: colors.primary }]}>
-            <ThemedText style={styles.avatarText}>U</ThemedText>
-          </View>
         </View>
 
-        {/* Quick Actions */}
         <View style={styles.section}>
           <ThemedText
             style={[styles.sectionTitle, { color: colors.onSurface }]}
@@ -247,7 +242,6 @@ const HomeScreen: React.FC = () => {
           )}
         </View>
 
-        {/* Recent Scans Section */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <ThemedText
@@ -289,7 +283,6 @@ const HomeScreen: React.FC = () => {
           )}
         </View>
 
-        {/* Community Section */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <ThemedText
@@ -333,53 +326,6 @@ const HomeScreen: React.FC = () => {
               />
             </View>
           </TouchableOpacity>
-        </View>
-
-        {/* Stats Section */}
-        <View style={styles.section}>
-          <ThemedText
-            style={[styles.sectionTitle, { color: colors.onSurface }]}
-          >
-            Your Health Overview
-          </ThemedText>
-          <View style={styles.statsContainer}>
-            <View
-              style={[styles.statCard, { backgroundColor: colors.surface }]}
-            >
-              <ThemedText style={styles.statNumber}>
-                {scans?.length || 0}
-              </ThemedText>
-              <ThemedText
-                style={[styles.statLabel, { color: colors.onSurfaceVariant }]}
-              >
-                Total Scans
-              </ThemedText>
-            </View>
-            <View
-              style={[styles.statCard, { backgroundColor: colors.surface }]}
-            >
-              <ThemedText style={styles.statNumber}>
-                {posts?.length || 0}
-              </ThemedText>
-              <ThemedText
-                style={[styles.statLabel, { color: colors.onSurfaceVariant }]}
-              >
-                Posts Read
-              </ThemedText>
-            </View>
-            <View
-              style={[styles.statCard, { backgroundColor: colors.surface }]}
-            >
-              <ThemedText style={styles.statNumber}>
-                {scans?.filter((s) => s.risk === 'LOW').length || 0}
-              </ThemedText>
-              <ThemedText
-                style={[styles.statLabel, { color: colors.onSurfaceVariant }]}
-              >
-                Low Risk
-              </ThemedText>
-            </View>
-          </View>
         </View>
       </ScrollView>
     </ThemedView>

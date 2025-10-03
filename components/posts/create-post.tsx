@@ -93,7 +93,7 @@ const CreatePost = forwardRef<CreatePostDialogRef>((_props, ref) => {
       },
       {
         onSuccess: () => {
-          Alert.alert('Success', 'Post created successfully!');
+          Alert.alert('Success', 'Post submitted. Awaiting approval');
           resetForm();
           setVisible(false);
         },

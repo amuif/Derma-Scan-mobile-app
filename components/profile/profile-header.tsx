@@ -58,7 +58,7 @@ export default function ProfileHeader() {
     return <Text>Loading..............</Text>;
   }
   if (isError) {
-    return <Text>Error occurred check your console</Text>;
+    return <Text>Error occurred check your console,{isError}</Text>;
   }
   return (
     user && (

@@ -1,19 +1,48 @@
 import { API_URL } from '@/constants/backend-url';
-import { Scan } from '@/types/scan';
+import { CheckImage, Scan } from '@/types/scan';
 
 export const scanApi = {
+  checkImage: async (token: string, file: File) => {
+    const form = new FormData();
+    form.append('file', file);
+    console.log(`${API_URL}/models/check`);
+    try {
+      const response = await fetch(`${API_URL}/models/check`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: form,
+      });
+
+      const result = (await response.json()) as CheckImage;
+      console.log('checking result', result);
+      return result;
+    } catch (error) {
+      console.error('Error uploading image', error);
+      throw error;
+    }
+  },
+
   uploadImage: async (
     token: string,
-    imageFile: File,
+    imageFile: string,
+    consent: string,
     userId: string,
     symptoms?: string,
   ) => {
     const form = new FormData();
 
+    const fileExtension = imageFile.split('.').pop() || 'jpg';
+
     console.log('userId', userId);
 
-    form.append('file', imageFile);
-
+    form.append('consent', consent);
+    form.append('file', {
+      uri: imageFile,
+      type: `image/${fileExtension}`,
+      name: `skin-lesion-${Date.now()}.${fileExtension}`,
+    } as any);
     form.append('userId', userId);
 
     if (symptoms) {
@@ -38,7 +67,12 @@ export const scanApi = {
     }
   },
 
-  textUpload: async (token: string, prompt: string, userId: string) => {
+  textUpload: async (
+    token: string,
+    prompt: string,
+    consenst: string,
+    userId: string,
+  ) => {
     try {
       const response = await fetch(`${API_URL}/models/text`, {
         method: 'POST',
@@ -46,7 +80,7 @@ export const scanApi = {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ prompt, userId }),
+        body: JSON.stringify({ prompt, consenst, userId }),
       });
       if (response.ok) {
         const result = await response.json();

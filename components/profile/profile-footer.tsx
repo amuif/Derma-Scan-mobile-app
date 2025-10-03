@@ -1,10 +1,10 @@
-import { Button } from '../ui/button';
 import { IconLogout, IconTrash } from '@tabler/icons-react-native';
 import { useDeleteMutation, useLogoutMutation } from '@/hooks/useAuth';
 import { ThemedView } from '../ThemedView';
 import { ThemedText } from '../ThemedText';
-import { StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import { StyleSheet, TouchableOpacity, Alert, View } from 'react-native';
 import { useAuthStore } from '@/stores/auth';
+import { Ionicons } from '@expo/vector-icons';
 
 export default function ProfileFooter() {
   const { mutateAsync: logout } = useLogoutMutation();
@@ -57,40 +57,73 @@ export default function ProfileFooter() {
 
   return (
     <ThemedView style={styles.container}>
-      <ThemedText style={styles.title}>Actions</ThemedText>
+      <ThemedView style={styles.footerCard}>
+        <ThemedView style={styles.header}>
+          <Ionicons name="settings-outline" size={24} color="#3b82f6" />
+          <ThemedText style={styles.title}>Account Actions</ThemedText>
+        </ThemedView>
 
-      <ThemedView style={styles.actionsContainer}>
-        <TouchableOpacity
-          style={styles.actionButton}
-          onPress={handleDeleteAccount}
-        >
-          <ThemedView style={styles.actionContent}>
-            <ThemedView
-              style={[styles.iconContainer, { backgroundColor: '#fee2e2' }]}
+        <ThemedView style={styles.actionsContainer}>
+          {/* Delete Account Button */}
+          <TouchableOpacity
+            style={styles.actionButton}
+            onPress={handleDeleteAccount}
+          >
+            <View
+              style={[
+                styles.buttonIconContainer,
+                { backgroundColor: '#fee2e2' },
+              ]}
             >
-              <IconTrash size={22} color="#dc2626" />
-            </ThemedView>
-            <ThemedView style={styles.textContainer}>
-              <ThemedText style={[styles.actionText, { color: '#dc2626' }]}>
-                Delete Account
+              <IconTrash size={20} color="#dc2626" />
+            </View>
+            <View style={styles.buttonContent}>
+              <ThemedText style={styles.buttonTitle}>Delete Account</ThemedText>
+              <ThemedText style={styles.buttonDescription}>
+                Permanently delete your account and all data
               </ThemedText>
-              <ThemedText style={styles.actionSubtext}>
-                Permanently delete your account
+            </View>
+            <View style={styles.buttonArrow}>
+              <Ionicons name="chevron-forward" size={20} color="#9ca3af" />
+            </View>
+          </TouchableOpacity>
+
+          {/* Logout Button */}
+          <TouchableOpacity style={styles.actionButton} onPress={handleLogout}>
+            <View
+              style={[
+                styles.buttonIconContainer,
+                { backgroundColor: '#eff6ff' },
+              ]}
+            >
+              <IconLogout size={20} color="#3b82f6" />
+            </View>
+            <View style={styles.buttonContent}>
+              <ThemedText style={styles.buttonTitle}>Logout</ThemedText>
+              <ThemedText style={styles.buttonDescription}>
+                Sign out of your account
               </ThemedText>
-            </ThemedView>
-          </ThemedView>
-        </TouchableOpacity>
-      </ThemedView>
+            </View>
+            <View style={styles.buttonArrow}>
+              <Ionicons name="chevron-forward" size={20} color="#9ca3af" />
+            </View>
+          </TouchableOpacity>
+        </ThemedView>
 
-      <ThemedView style={styles.logoutContainer}>
-        <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
-          <IconLogout size={24} color="#dc2626" />
-          <ThemedText style={styles.logoutText}>Logout</ThemedText>
-        </TouchableOpacity>
-      </ThemedView>
-
-      <ThemedView style={styles.versionContainer}>
-        <ThemedText style={styles.versionText}>App Version 1.0.0</ThemedText>
+        {/* Version Info */}
+        <ThemedView style={styles.versionContainer}>
+          <View style={styles.versionContent}>
+            <Ionicons
+              name="information-circle-outline"
+              size={16}
+              color="#9ca3af"
+            />
+            <ThemedText style={styles.versionText}>
+              App Version 1.0.0
+            </ThemedText>
+          </View>
+          <ThemedText style={styles.buildText}>Build 2024.01</ThemedText>
+        </ThemedView>
       </ThemedView>
     </ThemedView>
   );
@@ -98,70 +131,98 @@ export default function ProfileFooter() {
 
 const styles = StyleSheet.create({
   container: {
+    padding: 16,
+  },
+  footerCard: {
+    borderRadius: 16,
     padding: 20,
-    marginTop: 20,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 20,
+    gap: 12,
+    paddingBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e5e7eb',
   },
   title: {
     fontSize: 20,
     fontWeight: 'bold',
-    marginBottom: 16,
   },
   actionsContainer: {
     gap: 12,
-    marginBottom: 24,
+    marginBottom: 20,
   },
   actionButton: {
-    borderRadius: 12,
-    padding: 12,
-  },
-  actionContent: {
     flexDirection: 'row',
     alignItems: 'center',
+    backgroundColor: '#ffffff',
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#f1f5f9',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
   },
-  iconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+  buttonIconContainer: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 12,
+    marginRight: 16,
   },
-  textContainer: {
+  buttonContent: {
     flex: 1,
+    gap: 4,
   },
-  actionText: {
+  buttonTitle: {
     fontSize: 16,
-    fontWeight: '500',
+    fontWeight: '600',
     color: '#111827',
-    marginBottom: 2,
   },
-  actionSubtext: {
+  buttonDescription: {
     fontSize: 14,
     color: '#6b7280',
+    lineHeight: 18,
   },
-  logoutContainer: {
-    marginTop: 8,
-    marginBottom: 16,
-  },
-  logoutButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderColor: '#fecaca',
-  },
-  logoutText: {
-    color: '#dc2626',
-    fontWeight: '500',
-    fontSize: 16,
-    paddingHorizontal: 2,
-    marginHorizontal: 5,
+  buttonArrow: {
+    padding: 4,
   },
   versionContainer: {
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#f1f5f9',
     alignItems: 'center',
-    marginTop: 8,
+    gap: 8,
+  },
+  versionContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
   },
   versionText: {
     fontSize: 14,
+    color: '#6b7280',
+    fontWeight: '500',
+  },
+  buildText: {
+    fontSize: 12,
     color: '#9ca3af',
   },
 });

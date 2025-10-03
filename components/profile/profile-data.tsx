@@ -7,14 +7,17 @@ import {
   TouchableOpacity,
   Alert,
   ActivityIndicator,
+  View,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useCurrentUserQuery, useUpdateCurrentUser } from '@/hooks/useAuth';
 import { authStorage } from '@/lib/auth';
+import { useRouter } from 'expo-router';
 
 export default function ProfileData() {
-  const { data: user, isLoading } = useCurrentUserQuery();
+  const { data: user, isLoading, refetch } = useCurrentUserQuery();
   const { mutateAsync: updateUser } = useUpdateCurrentUser();
+  const router = useRouter();
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
@@ -52,6 +55,7 @@ export default function ProfileData() {
     try {
       const response = updateUser(formData);
       await authStorage.setUser((await response).user);
+      refetch();
 
       setIsEditing(false);
       Alert.alert('Success', 'Your profile has been updated');
@@ -144,7 +148,6 @@ export default function ProfileData() {
             )}
           </ThemedView>
 
-          {/* Email Field */}
           <ThemedView style={styles.field}>
             <ThemedView style={styles.fieldHeader}>
               <Ionicons name="mail-outline" size={16} color="#6b7280" />
@@ -175,6 +178,66 @@ export default function ProfileData() {
           </ThemedView>
         </ThemedView>
       </ThemedView>
+
+      {/* Enhanced History Section */}
+      <ThemedView style={styles.historyCard}>
+        <ThemedView style={styles.historyHeader}>
+          <Ionicons name="time-outline" size={24} color="#3b82f6" />
+          <ThemedText style={styles.historyTitle}>Your History</ThemedText>
+        </ThemedView>
+
+        <ThemedView style={styles.historyButtonsContainer}>
+          <TouchableOpacity
+            style={styles.historyButton}
+            onPress={() => router.push('/history')}
+          >
+            <View
+              style={[
+                styles.buttonIconContainer,
+                { backgroundColor: '#3b82f6' },
+              ]}
+            >
+              <Ionicons name="scan-outline" size={24} color="#ffffff" />
+            </View>
+            <View style={styles.buttonContent}>
+              <ThemedText style={styles.buttonTitle}>Scan History</ThemedText>
+              <ThemedText style={styles.buttonDescription}>
+                View your skin analysis results and previous scans
+              </ThemedText>
+            </View>
+            <View style={styles.buttonArrow}>
+              <Ionicons name="chevron-forward" size={20} color="#9ca3af" />
+            </View>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.historyButton}
+            onPress={() => router.push('/post')}
+          >
+            <View
+              style={[
+                styles.buttonIconContainer,
+                { backgroundColor: '#8b5cf6' },
+              ]}
+            >
+              <Ionicons
+                name="document-text-outline"
+                size={24}
+                color="#ffffff"
+              />
+            </View>
+            <View style={styles.buttonContent}>
+              <ThemedText style={styles.buttonTitle}>Post History</ThemedText>
+              <ThemedText style={styles.buttonDescription}>
+                Review your educational posts and content
+              </ThemedText>
+            </View>
+            <View style={styles.buttonArrow}>
+              <Ionicons name="chevron-forward" size={20} color="#9ca3af" />
+            </View>
+          </TouchableOpacity>
+        </ThemedView>
+      </ThemedView>
     </ThemedView>
   );
 }
@@ -190,11 +253,20 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
+    padding: 16,
   },
   card: {
-    borderRadius: 12,
+    borderRadius: 16,
     padding: 20,
     marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
   },
   header: {
     flexDirection: 'row',
@@ -212,32 +284,40 @@ const styles = StyleSheet.create({
   editButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 6,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 10,
     backgroundColor: '#eff6ff',
+    borderWidth: 1,
+    borderColor: '#3b82f6',
   },
   editButtonText: {
     color: '#3b82f6',
-    fontWeight: '500',
-    marginLeft: 4,
+    fontWeight: '600',
+    marginLeft: 6,
+    fontSize: 14,
   },
   editActions: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 12,
   },
   actionButton: {
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 6,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 10,
+    minWidth: 80,
+    alignItems: 'center',
   },
   cancelButton: {
-    backgroundColor: '#f3f4f6',
+    backgroundColor: '#f8fafc',
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
   },
   cancelButtonText: {
     color: '#4b5563',
-    fontWeight: '500',
+    fontWeight: '600',
+    fontSize: 14,
   },
   saveButton: {
     backgroundColor: '#3b82f6',
@@ -247,39 +327,120 @@ const styles = StyleSheet.create({
   },
   saveButtonText: {
     color: '#fff',
-    fontWeight: '500',
+    fontWeight: '600',
+    fontSize: 14,
   },
   fieldsContainer: {
-    gap: 16,
+    gap: 20,
     marginBottom: 20,
   },
   field: {
-    gap: 6,
+    gap: 8,
   },
   fieldHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: 8,
   },
   fieldLabel: {
     fontSize: 14,
     color: '#6b7280',
+    fontWeight: '500',
   },
   fieldValue: {
     fontSize: 16,
     color: '#111827',
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    backgroundColor: '#f9fafb',
-    borderRadius: 6,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    backgroundColor: '#f8fafc',
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#f1f5f9',
   },
   input: {
     fontSize: 16,
     color: '#111827',
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 6,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 10,
     borderWidth: 1,
+    borderColor: '#d1d5db',
+    backgroundColor: '#ffffff',
+  },
+  noDataText: {
+    textAlign: 'center',
+    fontSize: 16,
+    color: '#6b7280',
+    marginTop: 20,
+  },
+
+  // Enhanced History Styles
+  historyCard: {
+    borderRadius: 16,
+    padding: 20,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  historyHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 20,
+    gap: 12,
+  },
+  historyTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+  },
+  historyButtonsContainer: {
+    gap: 16,
+  },
+  historyButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#ffffff',
+    padding: 20,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#f1f5f9',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  buttonIconContainer: {
+    width: 50,
+    height: 50,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+  },
+  buttonContent: {
+    flex: 1,
+    gap: 4,
+  },
+  buttonTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#111827',
+  },
+  buttonDescription: {
+    fontSize: 14,
+    color: '#6b7280',
+    lineHeight: 18,
+  },
+  buttonArrow: {
+    padding: 4,
   },
   statusContainer: {
     paddingTop: 16,
@@ -303,12 +464,6 @@ const styles = StyleSheet.create({
   statusText: {
     color: '#166534',
     fontWeight: '500',
-  },
-  noDataText: {
-    textAlign: 'center',
-    fontSize: 16,
-    color: '#6b7280',
-    marginTop: 20,
   },
   additionalContent: {
     backgroundColor: '#fff',

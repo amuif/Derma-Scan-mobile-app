@@ -11,16 +11,19 @@ import {
   TextInput,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import { useImageUploadMutation } from '@/hooks/useAuth';
 import { ThemedView } from '../ThemedView';
 import * as ImagePicker from 'expo-image-picker';
 import { useCameraPermissions } from 'expo-camera';
 import * as ImageManipulator from 'expo-image-manipulator';
 import { ThemedText } from '../ThemedText';
-import { useTextScan } from '@/hooks/useScan';
+import {
+  useTextScan,
+  useImageUploadMutation,
+  useCheckImage,
+  useScanHistory,
+} from '@/hooks/useScan';
 import { useThemeColor } from '@/hooks/useThemeColors';
 
-// Update the interface to handle both response formats
 interface PredictionResult {
   conditions: string[];
   confidence: number;
@@ -29,33 +32,30 @@ interface PredictionResult {
   timestamp: string;
 }
 
-// New interface for text analysis response
-interface TextAnalysisResponse {
-  analysis: {
-    conditions: string[];
-    confidence: number;
-    guidance: string;
-    risk_level: 'low' | 'medium' | 'high';
-  };
-}
-
 type TabType = 'image' | 'text';
 
 const SkinLesionUploadScreen: React.FC = () => {
+  const { refetch } = useScanHistory();
+  const { mutateAsync: uploadImage } = useImageUploadMutation();
+  const { mutateAsync: uploadText } = useTextScan();
+  const { mutateAsync: checkImage } = useCheckImage();
+
   const [selectedImage, setSelectedImage] =
     useState<ImagePicker.ImagePickerAsset | null>(null);
   const [uploading, setUploading] = useState<boolean>(false);
   const [results, setResults] = useState<PredictionResult | null>(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [permission, requestPermission] = useCameraPermissions();
   const [activeTab, setActiveTab] = useState<TabType>('image');
   const [symptomsText, setSymptomsText] = useState<string>('');
-  const { mutateAsync: uploadImage } = useImageUploadMutation();
-  const { mutateAsync: uploadText } = useTextScan();
+  const [hasSkinLesion, setHasSkinLesion] = useState<boolean | null>(null);
+  const [lastScanType, setLastScanType] = useState<'image' | 'text' | null>(
+    null,
+  );
+  const [sharingToCommunity, setSharingToCommunity] = useState(false);
   const colors = useThemeColor();
 
-  // Helper function to transform text analysis response to match PredictionResult
   const transformTextResponse = (data: any): PredictionResult => {
-    // Check if it's the text analysis response format
     if (data?.analysis) {
       return {
         conditions: data.analysis.conditions || [],
@@ -66,7 +66,6 @@ const SkinLesionUploadScreen: React.FC = () => {
       };
     }
 
-    // If it's already in the expected format (image response), return as is
     return {
       conditions: data?.conditions || [],
       confidence: data?.confidence || 0,
@@ -95,7 +94,44 @@ const SkinLesionUploadScreen: React.FC = () => {
 
     if (!result.canceled) {
       const image = result.assets[0];
-      setSelectedImage(image!);
+
+      const compressedFile = await ImageManipulator.manipulateAsync(
+        image.uri,
+        [{ resize: { width: 1024 } }],
+        { compress: 0.7, format: ImageManipulator.SaveFormat.JPEG },
+      );
+
+      const file: any = {
+        uri: compressedFile.uri,
+        type: 'image/jpeg',
+        name: 'photo.jpg',
+      };
+
+      setSelectedImage({
+        ...image,
+        uri: compressedFile.uri,
+      });
+
+      setIsAnalyzing(true);
+      setHasSkinLesion(null);
+
+      try {
+        const response = await checkImage(file);
+        if (response && response?.conditions?.length > 0) {
+          setHasSkinLesion(true);
+        } else {
+          setHasSkinLesion(false);
+        }
+      } catch (error) {
+        console.log('Error checking image:', error);
+        Alert.alert(
+          'Analysis Error',
+          'Failed to analyze the image. Please try again.',
+        );
+        setHasSkinLesion(null);
+      } finally {
+        setIsAnalyzing(false);
+      }
     }
   };
 
@@ -105,9 +141,47 @@ const SkinLesionUploadScreen: React.FC = () => {
       aspect: [4, 3],
       quality: 1,
     });
+
     if (!result.canceled) {
       const image = result.assets[0];
-      setSelectedImage(image!);
+
+      const compressedFile = await ImageManipulator.manipulateAsync(
+        image.uri,
+        [{ resize: { width: 2024 } }],
+        { compress: 0.7, format: ImageManipulator.SaveFormat.JPEG },
+      );
+
+      const file: any = {
+        uri: compressedFile.uri,
+        type: 'image/jpeg',
+        name: image.fileName ?? 'photo.jpg',
+      };
+
+      setSelectedImage({
+        ...image,
+        uri: compressedFile.uri,
+      });
+
+      setIsAnalyzing(true);
+      setHasSkinLesion(null);
+
+      try {
+        const response = await checkImage(file);
+        if (response && response?.conditions?.length > 0) {
+          setHasSkinLesion(true);
+        } else {
+          setHasSkinLesion(false);
+        }
+      } catch (error) {
+        console.log('Error checking image:', error);
+        Alert.alert(
+          'Analysis Error',
+          'Failed to analyze the image. Please try again.',
+        );
+        setHasSkinLesion(null);
+      } finally {
+        setIsAnalyzing(false);
+      }
     }
   };
 
@@ -119,6 +193,15 @@ const SkinLesionUploadScreen: React.FC = () => {
       Alert.alert('No Image', 'Please select an image first');
       return;
     }
+
+    if (hasSkinLesion === false) {
+      Alert.alert(
+        'No Skin Lesion',
+        'Cannot analyze image that does not contain a detectable skin lesion.',
+      );
+      return;
+    }
+
     setUploading(true);
 
     const { uri } = selectedImage;
@@ -128,11 +211,15 @@ const SkinLesionUploadScreen: React.FC = () => {
     }
 
     try {
-      const data = await uploadImage({ uri, symptoms: 'itching, redness' });
+      const data = await uploadImage({
+        uri,
+        consent: 'false',
+        symptoms: 'itching, redness',
+      });
       console.table(data);
-      // Transform the response to ensure consistent format
       const transformedData = transformTextResponse(data);
       setResults(transformedData);
+      setLastScanType('image');
     } catch (error) {
       console.error('Upload error:', error);
       Alert.alert(
@@ -155,14 +242,17 @@ const SkinLesionUploadScreen: React.FC = () => {
     setUploading(true);
 
     try {
-      const data = await uploadText({ symptoms: symptomsText });
+      const data = await uploadText({
+        symptoms: symptomsText,
+        consent: 'false',
+      });
       console.log('Text upload response:', data);
 
-      // Transform the text response to match the expected format
       const transformedData = transformTextResponse(data);
       console.log('Transformed data:', transformedData);
 
       setResults(transformedData);
+      setLastScanType('text');
     } catch (error) {
       console.error('Text upload error:', error);
       Alert.alert(
@@ -173,14 +263,136 @@ const SkinLesionUploadScreen: React.FC = () => {
       setUploading(false);
     }
   };
+  const handleImageUploadToCommunity = async (): Promise<void> => {
+    if (sharingToCommunity) {
+      return;
+    }
 
+    if (!selectedImage) {
+      Alert.alert('No Image', 'Please select an image first');
+      return;
+    }
+
+    if (hasSkinLesion === false) {
+      Alert.alert(
+        'No Skin Lesion',
+        'Cannot share image that does not contain a detectable skin lesion.',
+      );
+      return;
+    }
+
+    setSharingToCommunity(true);
+
+    try {
+      console.log('Starting image share to community...');
+
+      const { uri } = selectedImage;
+      if (!(await checkImageQuality(uri))) {
+        Alert.alert('Image Quality', 'Please use a higher-quality photo.');
+        return;
+      }
+
+      // Call the upload function with consent: true
+      const data = await uploadImage({
+        uri,
+        consent: 'true', // This is the key difference
+        symptoms: symptomsText.trim() || 'itching, redness', // Use actual symptoms if available
+      });
+
+      console.log('Community share successful:', data);
+
+      const transformedData = transformTextResponse(data);
+      setResults(transformedData);
+      setLastScanType('image');
+
+      Alert.alert('Success', 'Your scan has been shared to the community!');
+    } catch (error: any) {
+      console.error('Error sharing to community:', error);
+      console.error('Error details:', error.response?.data || error.message);
+
+      Alert.alert(
+        'Sharing Failed',
+        error.response?.data?.message ||
+          'Failed to share to community. Please try again.',
+      );
+    } finally {
+      setSharingToCommunity(false);
+    }
+  };
+
+  const handleTextUploadToCommunity = async (): Promise<void> => {
+    if (sharingToCommunity) {
+      return;
+    }
+
+    if (!symptomsText.trim()) {
+      Alert.alert('No Symptoms', 'Please describe your symptoms first');
+      return;
+    }
+
+    setSharingToCommunity(true);
+
+    try {
+      console.log('Starting text share to community...');
+
+      const data = await uploadText({
+        symptoms: symptomsText,
+        consent: 'true', // This is the key difference
+      });
+
+      console.log('Community text share successful:', data);
+
+      const transformedData = transformTextResponse(data);
+      setResults(transformedData);
+      setLastScanType('text');
+
+      Alert.alert(
+        'Success',
+        'Your symptoms analysis has been shared to the community!',
+      );
+    } catch (error: any) {
+      console.error('Error sharing text to community:', error);
+      console.error('Error details:', error.response?.data || error.message);
+
+      Alert.alert(
+        'Sharing Failed',
+        error.response?.data?.message ||
+          'Failed to share to community. Please try again.',
+      );
+    } finally {
+      setSharingToCommunity(false);
+    }
+  };
+
+  const handleShareToCommunity = async (): Promise<void> => {
+    if (!lastScanType) {
+      Alert.alert('Error', 'No scan results available to share.');
+      return;
+    }
+
+    console.log('Sharing to community, last scan type:', lastScanType);
+
+    try {
+      if (lastScanType === 'image') {
+        await handleImageUploadToCommunity();
+      } else {
+        await handleTextUploadToCommunity();
+      }
+
+      // Refresh history after successful share
+      refetch();
+    } catch (error) {
+      console.error('Error in handleShareToCommunity:', error);
+    }
+  };
   const clearSelection = (): void => {
     setSelectedImage(null);
     setSymptomsText('');
     setResults(null);
+    setHasSkinLesion(null);
+    setLastScanType(null);
   };
 
-  // Safe rendering of conditions to handle undefined cases
   const renderConditions = (conditions: string[] | undefined) => {
     if (!conditions || conditions.length === 0) {
       return (
@@ -217,6 +429,23 @@ const SkinLesionUploadScreen: React.FC = () => {
           <TouchableOpacity style={styles.clearButton} onPress={clearSelection}>
             <Icon name="close" size={20} color="#fff" />
           </TouchableOpacity>
+
+          {hasSkinLesion !== null && (
+            <View
+              style={[
+                styles.skinDetectionBadge,
+                {
+                  backgroundColor: hasSkinLesion ? '#4CAF50' : '#FF9800',
+                },
+              ]}
+            >
+              <Text style={styles.skinDetectionText}>
+                {hasSkinLesion
+                  ? 'Skin Lesion Detected'
+                  : 'No Skin Lesion Found'}
+              </Text>
+            </View>
+          )}
         </ThemedView>
       ) : (
         <View
@@ -239,29 +468,41 @@ const SkinLesionUploadScreen: React.FC = () => {
         <TouchableOpacity
           style={[styles.button, { backgroundColor: colors.primary }]}
           onPress={takePhoto}
-          disabled={uploading}
+          disabled={uploading || isAnalyzing}
         >
-          <Icon
-            name="camera-alt"
-            size={20}
-            color="#fff"
-            style={styles.buttonIcon}
-          />
-          <Text style={styles.buttonText}>Take Photo</Text>
+          {isAnalyzing ? (
+            <ActivityIndicator color="#fff" size="small" />
+          ) : (
+            <>
+              <Icon
+                name="camera-alt"
+                size={20}
+                color="#fff"
+                style={styles.buttonIcon}
+              />
+              <Text style={styles.buttonText}>Take Photo</Text>
+            </>
+          )}
         </TouchableOpacity>
 
         <TouchableOpacity
           style={[styles.button, { backgroundColor: colors.primary }]}
           onPress={selectFromGallery}
-          disabled={uploading}
+          disabled={uploading || isAnalyzing}
         >
-          <Icon
-            name="photo-library"
-            size={20}
-            color="#fff"
-            style={styles.buttonIcon}
-          />
-          <Text style={styles.buttonText}>Choose from Gallery</Text>
+          {isAnalyzing ? (
+            <ActivityIndicator color="#fff" size="small" />
+          ) : (
+            <>
+              <Icon
+                name="photo-library"
+                size={20}
+                color="#fff"
+                style={styles.buttonIcon}
+              />
+              <Text style={styles.buttonText}>Choose from Gallery</Text>
+            </>
+          )}
         </TouchableOpacity>
       </View>
 
@@ -269,10 +510,15 @@ const SkinLesionUploadScreen: React.FC = () => {
         <TouchableOpacity
           style={[
             styles.uploadButton,
-            { backgroundColor: uploading ? colors.neutral : '#34C759' },
+            {
+              backgroundColor:
+                uploading || isAnalyzing || hasSkinLesion === false
+                  ? colors.neutral
+                  : '#34C759',
+            },
           ]}
           onPress={handleImageUpload}
-          disabled={uploading}
+          disabled={uploading || isAnalyzing || hasSkinLesion === false}
         >
           {uploading ? (
             <ActivityIndicator color="#fff" />
@@ -284,10 +530,23 @@ const SkinLesionUploadScreen: React.FC = () => {
                 color="#fff"
                 style={styles.buttonIcon}
               />
-              <Text style={styles.buttonText}>Analyze Image</Text>
+              <Text style={styles.buttonText}>
+                {hasSkinLesion === false
+                  ? 'Analysis Disabled'
+                  : 'Analyze Image'}
+              </Text>
             </>
           )}
         </TouchableOpacity>
+      )}
+
+      {isAnalyzing && (
+        <View style={styles.analysisStatus}>
+          <ActivityIndicator size="small" color={colors.primary} />
+          <Text style={[styles.analysisStatusText, { color: colors.primary }]}>
+            Checking for skin lesions...
+          </Text>
+        </View>
       )}
     </>
   );
@@ -387,7 +646,6 @@ const SkinLesionUploadScreen: React.FC = () => {
         Upload an image or describe symptoms for AI-powered analysis
       </Text>
 
-      {/* Tab Navigation */}
       <View
         style={[styles.tabContainer, { backgroundColor: colors.tabBackground }]}
       >
@@ -442,10 +700,8 @@ const SkinLesionUploadScreen: React.FC = () => {
         </TouchableOpacity>
       </View>
 
-      {/* Tab Content */}
       {activeTab === 'image' ? renderImageTab() : renderTextTab()}
 
-      {/* Results Section */}
       {results && (
         <ThemedView
           style={[
@@ -464,7 +720,7 @@ const SkinLesionUploadScreen: React.FC = () => {
           </ThemedView>
 
           <Text style={[styles.resultScore, { color: colors.primary }]}>
-            Confidence: {Math.round(results.confidence || 0)}%
+            Confidence: {((results.confidence || 0) * 100).toFixed(1)}%
           </Text>
 
           <Text
@@ -499,10 +755,29 @@ const SkinLesionUploadScreen: React.FC = () => {
           >
             {new Date(results.timestamp || new Date()).toLocaleString()}
           </Text>
+
+          <TouchableOpacity
+            style={[styles.shareButton, { backgroundColor: colors.primary }]}
+            onPress={handleShareToCommunity}
+            disabled={sharingToCommunity}
+          >
+            {sharingToCommunity ? (
+              <ActivityIndicator color="#fff" size="small" />
+            ) : (
+              <>
+                <Icon
+                  name="share"
+                  size={20}
+                  color="#fff"
+                  style={styles.buttonIcon}
+                />
+                <Text style={styles.shareButtonText}>Share to Community</Text>
+              </>
+            )}
+          </TouchableOpacity>
         </ThemedView>
       )}
 
-      {/* Tips Section */}
       {!selectedImage && activeTab === 'image' && (
         <ThemedView
           style={[
@@ -612,6 +887,19 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  skinDetectionBadge: {
+    position: 'absolute',
+    bottom: 12,
+    left: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+  },
+  skinDetectionText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '600',
+  },
   placeholderContainer: {
     width: 320,
     height: 320,
@@ -644,6 +932,18 @@ const styles = StyleSheet.create({
   },
   buttonIcon: { marginRight: 8 },
   buttonText: { color: '#fff', fontWeight: '600', fontSize: 16 },
+
+  // Analysis Status
+  analysisStatus: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 10,
+  },
+  analysisStatusText: {
+    marginLeft: 8,
+    fontSize: 14,
+  },
 
   // Text Tab Styles
   textInputContainer: {
@@ -733,6 +1033,24 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginTop: 10,
     textAlign: 'center',
+  },
+
+  // Share Button
+  shareButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 25,
+    marginTop: 16,
+    elevation: 2,
+  },
+  shareButtonText: {
+    color: '#fff',
+    fontWeight: '600',
+    fontSize: 16,
+    marginLeft: 8,
   },
 
   // Tips Styles

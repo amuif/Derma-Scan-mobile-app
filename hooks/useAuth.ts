@@ -1,13 +1,9 @@
-import { authApi, authStorage, scanApi } from '@/lib/auth';
+import { authApi, authStorage } from '@/lib/auth';
 import { useAuthStore } from '@/stores/auth';
 import { User } from '@/types/user';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 
-interface UploadVariables {
-  uri: string;
-  symptoms: string;
-}
 export const useTokenQuery = () => {
   return useQuery({
     queryKey: authQueryKeys.token(),
@@ -156,22 +152,6 @@ export const useDeleteMutation = () => {
       console.error('Delete Current user error', error);
       await authStorage.clearAuth();
       queryClient.removeQueries({ queryKey: authQueryKeys.all });
-    },
-  });
-};
-
-export const useImageUploadMutation = () => {
-  const { user } = useAuthStore();
-  return useMutation({
-    mutationFn: async ({ uri, symptoms }: UploadVariables) => {
-      const token = await authStorage.getToken();
-      return scanApi.uploadImage(token!, uri, user?.id!, symptoms);
-    },
-    onSuccess: () => {
-      console.log('uploaded successfully!');
-    },
-    onError: (error) => {
-      console.error('Error uploading image', error);
     },
   });
 };

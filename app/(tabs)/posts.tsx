@@ -104,7 +104,7 @@ export default function ParentComponent() {
         ]}
       >
         <ThemedText style={[styles.title, { color: colors.primary }]}>
-          Educational Posts
+          Education Hub
         </ThemedText>
         <TouchableOpacity
           style={[styles.createButton, { backgroundColor: colors.primary }]}
@@ -113,7 +113,7 @@ export default function ParentComponent() {
           <ThemedText
             style={[styles.createButtonText, { color: colors.onPrimary }]}
           >
-            Create New Post
+            Create educational post
           </ThemedText>
         </TouchableOpacity>
       </View>

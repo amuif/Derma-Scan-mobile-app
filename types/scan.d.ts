@@ -24,3 +24,25 @@ export interface Condition {
   description: string;
   scans: ScanCondition[];
 }
+
+export interface CheckImage {
+  conditions: string[];
+  confidence: number;
+  message: string;
+  timestamp: string;
+}
+export interface CheckImageResponse {
+  conditions: string[];
+  confidence: number;
+  message: string;
+  timestamp: string;
+}
+
+export interface PredictionResult {
+  conditions: string[];
+  confidence: number;
+  risk: 'low' | 'medium' | 'high';
+  symptomNote: string;
+  timestamp: string;
+  message?: string;
+}

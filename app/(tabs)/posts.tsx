@@ -14,7 +14,6 @@ import {
   useColorScheme,
 } from 'react-native';
 
-// Theme colors matching the posts component
 const themeColors = {
   light: {
     // Surfaces

@@ -81,7 +81,6 @@ export default function LoginForm() {
     }
   }
 
-
   return (
     <ThemedView style={styles.container}>
       <ThemedView style={styles.inputContainer}>
@@ -148,8 +147,6 @@ export default function LoginForm() {
         {errors.password ? (
           <ThemedText style={styles.errorText}>{errors.password}</ThemedText>
         ) : null}
-
-
       </ThemedView>
 
       {/* Submit button */}

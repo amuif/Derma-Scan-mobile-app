@@ -39,7 +39,7 @@ const HomeScreen: React.FC = () => {
   } = useScanHistory();
 
   useEffect(() => {
-    const selfPost = posts?.filter((post) => post.author === user?.id) || [];
+    const selfPost = posts?.filter((post) => post.author.id === user?.id) || [];
     setRecentPosts(selfPost);
   }, [posts, user]);
 

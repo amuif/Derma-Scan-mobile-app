@@ -1,3 +1,4 @@
+import { User } from './user.d.ts';
 const EducationCategory = {
   TIPS: 'TIPS',
   PREVENTION: 'PREVENTION',

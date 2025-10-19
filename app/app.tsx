@@ -31,8 +31,8 @@ export default function AppLayout() {
 
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)"  />
+      <Stack screenOptions={{headerShown:false}}>
+        <Stack.Screen name="(tabs)"    />
         <Stack.Screen name="login"  />
         <Stack.Screen name="signup"  />
         <Stack.Screen name="+not-found" />

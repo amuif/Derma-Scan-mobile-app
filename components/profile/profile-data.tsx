@@ -22,13 +22,16 @@ export default function ProfileData() {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
+    password: '',
   });
+  const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
     if (user) {
       setFormData({
         name: user.name || '',
         email: user.email || '',
+        password: '',
       });
     }
   }, [user]);
@@ -41,7 +44,6 @@ export default function ProfileData() {
   };
 
   const handleSave = async () => {
-    // Basic validation
     if (!formData.name.trim()) {
       Alert.alert('Error', 'Please enter your name');
       return;
@@ -52,11 +54,23 @@ export default function ProfileData() {
       return;
     }
 
+    if (formData.password && formData.password.length < 6) {
+      Alert.alert('Error', 'Password must be at least 6 characters long');
+      return;
+    }
+
     try {
-      const response = updateUser(formData);
+      const updateData = {
+        name: formData.name,
+        email: formData.email,
+        ...(formData.password && { password: formData.password }),
+      };
+
+      const response = updateUser(updateData);
       await authStorage.setUser((await response).user);
       refetch();
 
+      setFormData((prev) => ({ ...prev, password: '' }));
       setIsEditing(false);
       Alert.alert('Success', 'Your profile has been updated');
     } catch (error) {
@@ -69,8 +83,10 @@ export default function ProfileData() {
     setFormData({
       name: user?.name || '',
       email: user?.email || '',
+      password: '',
     });
     setIsEditing(false);
+    setShowPassword(false);
   };
 
   if (!user) {
@@ -109,14 +125,14 @@ export default function ProfileData() {
           ) : (
             <ThemedView style={styles.editActions}>
               <TouchableOpacity
-                style={[styles.actionButton, styles.cancelButton]}
+                style={[styles.cancelButton]}
                 onPress={handleCancel}
                 disabled={isLoading}
               >
                 <ThemedText style={styles.cancelButtonText}>Cancel</ThemedText>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[styles.actionButton, styles.saveButton]}
+                style={[styles.saveButton]}
                 onPress={handleSave}
                 disabled={isLoading}
               >
@@ -167,6 +183,39 @@ export default function ProfileData() {
             )}
           </ThemedView>
 
+          {isEditing && (
+            <ThemedView style={styles.field}>
+              <ThemedView style={styles.fieldHeader}>
+                <Ionicons
+                  name="lock-closed-outline"
+                  size={16}
+                  color="#6b7280"
+                />
+                <ThemedText style={styles.fieldLabel}>New Password</ThemedText>
+              </ThemedView>
+              <ThemedView style={styles.passwordContainer}>
+                <TextInput
+                  style={styles.passwordInput}
+                  value={formData.password}
+                  onChangeText={(value) => handleInputChange('password', value)}
+                  placeholder="Enter new password"
+                  secureTextEntry={!showPassword}
+                  autoCapitalize="none"
+                />
+                <TouchableOpacity
+                  style={styles.eyeButton}
+                  onPress={() => setShowPassword(!showPassword)}
+                >
+                  <Ionicons
+                    name={showPassword ? 'eye-off-outline' : 'eye-outline'}
+                    size={20}
+                    color="#6b7280"
+                  />
+                </TouchableOpacity>
+              </ThemedView>
+            </ThemedView>
+          )}
+
           <ThemedView style={styles.field}>
             <ThemedView style={styles.fieldHeader}>
               <Ionicons name="refresh-outline" size={16} color="#6b7280" />
@@ -179,7 +228,6 @@ export default function ProfileData() {
         </ThemedView>
       </ThemedView>
 
-      {/* Enhanced History Section */}
       <ThemedView style={styles.historyCard}>
         <ThemedView style={styles.historyHeader}>
           <Ionicons name="time-outline" size={24} color="#3b82f6" />
@@ -313,6 +361,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#f8fafc',
     borderWidth: 1,
     borderColor: '#e5e7eb',
+    minWidth: 60,
+    padding: 10,
+    borderRadius: 10,
   },
   cancelButtonText: {
     color: '#4b5563',
@@ -321,14 +372,15 @@ const styles = StyleSheet.create({
   },
   saveButton: {
     backgroundColor: '#3b82f6',
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
+    padding: 10,
+    borderRadius: 10,
+    minWidth: 60,
   },
   saveButtonText: {
     color: '#fff',
     fontWeight: '600',
     fontSize: 14,
+    textAlign: 'center',
   },
   fieldsContainer: {
     gap: 20,
@@ -366,6 +418,32 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#d1d5db',
     backgroundColor: '#ffffff',
+  },
+  passwordContainer: {
+    position: 'relative',
+  },
+  passwordInput: {
+    fontSize: 16,
+    color: '#111827',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    paddingRight: 50, // Space for eye icon
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#d1d5db',
+    backgroundColor: '#ffffff',
+  },
+  eyeButton: {
+    position: 'absolute',
+    right: 16,
+    top: 12,
+    padding: 4,
+  },
+  passwordHint: {
+    fontSize: 12,
+    color: '#6b7280',
+    fontStyle: 'italic',
+    marginTop: 4,
   },
   noDataText: {
     textAlign: 'center',

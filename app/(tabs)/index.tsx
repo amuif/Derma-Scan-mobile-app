@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   ScrollView,
@@ -15,10 +15,14 @@ import { Post } from '@/types/posts';
 import { Scan } from '@/types/scan';
 import { useRouter } from 'expo-router';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import { useCurrentUserQuery } from '@/hooks/useAuth';
 
 const HomeScreen: React.FC = () => {
   const colors = useThemeColor();
   const router = useRouter();
+  const { data: user } = useCurrentUserQuery();
+  const [recentScans, setRecentScans] = useState<Scan[]>([]);
+  const [recentPosts, setRecentPosts] = useState<Post[]>([]);
 
   const {
     data: posts,
@@ -34,15 +38,22 @@ const HomeScreen: React.FC = () => {
     refetch: refetchScans,
   } = useScanHistory();
 
+  useEffect(() => {
+    const selfPost = posts?.filter((post) => post.author === user?.id) || [];
+    setRecentPosts(selfPost);
+  }, [posts, user]);
+
+  useEffect(() => {
+    const selfScan = scans?.filter((scan) => scan.user.id === user?.id) || [];
+    setRecentScans(selfScan.slice(0, 3));
+  }, [scans, user]);
+
   const refreshing = postsLoading || scansLoading;
 
   const onRefresh = () => {
     refetchPosts();
     refetchScans();
   };
-
-  const recentPosts = posts?.slice(0, 3) || [];
-  const recentScans = scans?.slice(0, 3) || [];
 
   const navigateToPosts = () => {
     router.push('/posts');
@@ -120,12 +131,29 @@ const HomeScreen: React.FC = () => {
     <TouchableOpacity
       style={[styles.scanItem, { backgroundColor: colors.surface }]}
     >
-      <View style={styles.scanHeader}>
-        <ThemedText style={styles.scanConditions} numberOfLines={1}>
-          {(scan && scan.conditions?.condition?.name?.join(', ')) ||
-            'No conditions identified'}
-        </ThemedText>
-        <View
+      <ThemedView
+        style={styles.scanHeader}
+        lightColor="transparent"
+        darkColor="transparent"
+      >
+        <ThemedView
+          className="flex-col space-y-3"
+          lightColor="transparent"
+          darkColor="transparent"
+        >
+          <ThemedText
+            className="font-semibold"
+            style={{ color: colors.onSurfaceVariant }}
+          >
+            Conditions:
+          </ThemedText>
+          <ThemedText style={styles.scanConditions} numberOfLines={1}>
+            {scan?.conditions?.length
+              ? scan.conditions.map((c) => c.condition.name).join(', ')
+              : 'No conditions identified'}
+          </ThemedText>
+        </ThemedView>
+        <ThemedView
           style={[
             styles.riskBadge,
             {
@@ -141,12 +169,20 @@ const HomeScreen: React.FC = () => {
           <ThemedText style={styles.riskText}>
             {scan.risk?.toUpperCase() || 'LOW'}
           </ThemedText>
-        </View>
-      </View>
+        </ThemedView>
+      </ThemedView>
+      <ThemedView
+        className="flex-col space-y-2 bg-transparent"
+        lightColor="transparent"
+        darkColor="transparent"
+      >
+        <ThemedText className="font-semibold">Question:</ThemedText>
+        <ThemedText>{scan.question || "User's question"}</ThemedText>
+      </ThemedView>
       <ThemedText
         style={[styles.scanConfidence, { color: colors.onSurfaceVariant }]}
       >
-        Confidence: {Math.round(scan.confidence || 0)}%
+        Confidence: {(scan.confidence * 100).toFixed(1) || 0}%
       </ThemedText>
       <ThemedText style={[styles.scanDate, { color: colors.onSurfaceMuted }]}>
         {new Date(scan.timestamp).toLocaleDateString()}

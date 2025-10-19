@@ -1,13 +1,16 @@
+import { User } from './user';
 export interface Scan {
   id: string;
   userId: string;
   imageUrl: string;
   imageQuality: string;
   confidence: number;
-  conditions: ScanCondition;
+  conditions: ScanCondition[];
   risk: 'HIGH' | 'LOW' | 'MEDIUM';
   notes: string;
   timestamp: string;
+  user: User;
+  question?: string;
 }
 
 export interface ScanCondition {

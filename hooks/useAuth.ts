@@ -24,11 +24,11 @@ export const useUserQuery = () => {
 };
 
 export const useCurrentUserQuery = () => {
+  const { user } = useAuthStore();
   return useQuery({
     queryKey: authQueryKeys.currentUser(),
     queryFn: async () => {
       const token = await authStorage.getToken();
-      const user = await authStorage.getUser();
       if (!token || !user) return;
       return authApi.getCurrentUser(token, user.id);
     },

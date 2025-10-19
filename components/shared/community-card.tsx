@@ -15,59 +15,65 @@ const blurhash =
 
 export default function CommunityCard({ item }: CommunityCardProps) {
   useEffect(() => {
-    console.log(`${FILES_URL}/${item.imageUrl}`);
+    console.log('item', item);
   }, [item]);
-
   return (
     <ThemedView style={styles.card}>
-      <Image
-        source={{ uri: `${FILES_URL}/${item.imageUrl}` }}
-        placeholder={blurhash}
-        contentFit="cover"
-        transition={1000}
-        style={styles.image}
-      />
+      {item.imageUrl !== 'text-analysis' ? (
+        <Image
+          source={{ uri: `${FILES_URL}/${item.imageUrl}` }}
+          placeholder={blurhash}
+          contentFit="cover"
+          transition={1000}
+          style={styles.image}
+        />
+      ) : (
+        <ThemedView className="flex-col ">
+          <ThemedText className="font-semibold">Question:</ThemedText>
+          <ThemedText>{item.question || 'User asked question'}</ThemedText>
+        </ThemedView>
+      )}
       <ThemedView style={styles.contentContainer}>
         {item.conditions ? (
-          item.conditions.map((c, index: number) => (
-            <ThemedView key={index} style={styles.conditionContainer}>
-              <ThemedText style={styles.cardHeader}>
-                {c.condition.name}
-              </ThemedText>
-            </ThemedView>
-          ))
+          <ThemedText style={styles.cardHeader}>
+            {item.conditions.map((c) => c.condition.name).join(', ')}
+          </ThemedText>
         ) : (
           <ThemedText style={styles.noConditionsText}>
             No conditions detected
           </ThemedText>
         )}
-        <View style={styles.row}>
+        <View className="flex-col gap-2">
           <ThemedText style={styles.descriptionText}>{item.notes}</ThemedText>
-          <ThemedView
-            style={[
-              styles.badge,
-              styles.riskBadge,
-              {
-                backgroundColor:
-                  item.risk === 'HIGH'
-                    ? '#ef4444'
-                    : item.risk === 'MEDIUM'
-                      ? '#f59e0b'
-                      : '#22c55e',
-              },
-            ]}
-          >
-            <ThemedText style={styles.badgeText}>Risk: {item.risk}</ThemedText>
-          </ThemedView>
-          <ThemedView style={[styles.badge, styles.confidenceBadge]}>
-            <ThemedText style={styles.badgeText}>
-              Confidence: {(item.confidence * 100).toFixed(1)}%
-            </ThemedText>
-          </ThemedView>
-          <ThemedView style={[styles.badge, styles.timestampBadge]}>
-            <ThemedText style={styles.badgeText}>
-              {new Date(item.timestamp).toLocaleDateString()}
-            </ThemedText>
+          <ThemedView className="flex-row gap-2 flex-wrap">
+            <ThemedView
+              style={[
+                styles.badge,
+                styles.riskBadge,
+                {
+                  backgroundColor:
+                    item.risk === 'HIGH'
+                      ? '#ef4444'
+                      : item.risk === 'MEDIUM'
+                        ? '#f59e0b'
+                        : '#22c55e',
+                },
+              ]}
+            >
+              <ThemedText style={styles.badgeText}>
+                Risk: {item.risk}
+              </ThemedText>
+            </ThemedView>
+            <ThemedView style={[styles.badge, styles.confidenceBadge]}>
+              <ThemedText style={styles.badgeText}>
+                Confidence: {(item.confidence * 100).toFixed(1)}%
+              </ThemedText>
+            </ThemedView>
+            <ThemedView style={[styles.badge, styles.timestampBadge]}>
+              <ThemedText style={styles.badgeText}>
+                {new Date(item.timestamp).toLocaleDateString()}
+              </ThemedText>
+            </ThemedView>
           </ThemedView>
         </View>
       </ThemedView>
@@ -91,20 +97,22 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   contentContainer: {
-    paddingHorizontal: 8,
+    display: 'flex',
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    paddingVertical: 5,
+    paddingHorizontal: 5,
   },
   conditionContainer: {
     borderRadius: 16,
   },
   cardHeader: {
     fontSize: 20,
-    fontWeight: '700',
-    color: '#1f2937',
+    fontWeight: '600',
     marginBottom: 6,
   },
   descriptionText: {
     fontSize: 14,
-    color: '#4b5563',
     lineHeight: 20,
   },
   noConditionsText: {

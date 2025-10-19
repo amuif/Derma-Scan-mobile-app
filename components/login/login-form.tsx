@@ -81,12 +81,6 @@ export default function LoginForm() {
     }
   }
 
-  const handleForgotPassword = () => {
-    Alert.alert(
-      'Forgot Password',
-      'Password reset functionality would be implemented here.',
-    );
-  };
 
   return (
     <ThemedView style={styles.container}>
@@ -155,15 +149,7 @@ export default function LoginForm() {
           <ThemedText style={styles.errorText}>{errors.password}</ThemedText>
         ) : null}
 
-        <TouchableOpacity
-          style={styles.forgotPasswordContainer}
-          onPress={handleForgotPassword}
-          disabled={isLoading}
-        >
-          <ThemedText style={styles.forgotPasswordText}>
-            Forgot your password?
-          </ThemedText>
-        </TouchableOpacity>
+
       </ThemedView>
 
       {/* Submit button */}

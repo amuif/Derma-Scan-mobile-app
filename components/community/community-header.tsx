@@ -57,7 +57,6 @@ const themeColors = {
   },
 };
 
-// Hook to use theme colors
 const useThemeColors = () => {
   const colorScheme = useColorScheme();
   return themeColors[colorScheme === 'dark' ? 'dark' : 'light'];
@@ -129,6 +128,7 @@ export default function CommunityHeader() {
 const styles = StyleSheet.create({
   container: {
     paddingHorizontal: 10,
+    paddingBottom: 180,
   },
   headerText: {
     marginTop: 60,

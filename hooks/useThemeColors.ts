@@ -36,9 +36,9 @@ export const themeColors = {
     // Specific component colors
     tabBackground: 'rgba(0,0,0,0.05)',
     conditionBadge: 'rgba(0,122,255,0.1)',
-    riskLow: 'rgba(52,199,89,0.15)',
-    riskMedium: 'rgba(255,204,0,0.15)',
-    riskHigh: 'rgba(255,59,48,0.15)',
+    riskLow: '#34C75933',
+    riskMedium: '#FFCC0033',
+    riskHigh: '#FF3B3033',
     tipsBackground: 'rgba(0,122,255,0.05)',
   },
   dark: {
@@ -76,9 +76,9 @@ export const themeColors = {
     // Specific component colors
     tabBackground: 'rgba(255,255,255,0.05)',
     conditionBadge: 'rgba(96,165,250,0.15)',
-    riskLow: 'rgba(74,222,128,0.15)',
-    riskMedium: 'rgba(251,191,36,0.15)',
-    riskHigh: 'rgba(248,113,113,0.15)',
+    riskLow: '#4ADE8033',
+    riskMedium: '#FBBF2433',
+    riskHigh: '#F8717133',
     tipsBackground: 'rgba(96,165,250,0.05)',
   },
 };

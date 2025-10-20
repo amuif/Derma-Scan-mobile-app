@@ -64,40 +64,39 @@ export default function ProfileFooter() {
         </ThemedView>
 
         <ThemedView style={styles.actionsContainer}>
-          {/* Delete Account Button */}
           <TouchableOpacity
             style={styles.actionButton}
             onPress={handleDeleteAccount}
           >
-            <View
+            <ThemedView
               style={[
                 styles.buttonIconContainer,
                 { backgroundColor: '#fee2e2' },
               ]}
             >
               <IconTrash size={20} color="#dc2626" />
-            </View>
-            <View style={styles.buttonContent}>
+            </ThemedView>
+            <ThemedView style={styles.buttonContent}>
               <ThemedText style={styles.buttonTitle}>Delete Account</ThemedText>
               <ThemedText style={styles.buttonDescription}>
                 Permanently delete your account and all data
               </ThemedText>
-            </View>
-            <View style={styles.buttonArrow}>
+            </ThemedView>
+            <ThemedView style={styles.buttonArrow}>
               <Ionicons name="chevron-forward" size={20} color="#9ca3af" />
-            </View>
+            </ThemedView>
           </TouchableOpacity>
 
           {/* Logout Button */}
           <TouchableOpacity style={styles.actionButton} onPress={handleLogout}>
-            <View
+            <ThemedView
               style={[
                 styles.buttonIconContainer,
                 { backgroundColor: '#eff6ff' },
               ]}
             >
               <IconLogout size={20} color="#3b82f6" />
-            </View>
+            </ThemedView>
             <View style={styles.buttonContent}>
               <ThemedText style={styles.buttonTitle}>Logout</ThemedText>
               <ThemedText style={styles.buttonDescription}>
@@ -108,21 +107,6 @@ export default function ProfileFooter() {
               <Ionicons name="chevron-forward" size={20} color="#9ca3af" />
             </View>
           </TouchableOpacity>
-        </ThemedView>
-
-        {/* Version Info */}
-        <ThemedView style={styles.versionContainer}>
-          <View style={styles.versionContent}>
-            <Ionicons
-              name="information-circle-outline"
-              size={16}
-              color="#9ca3af"
-            />
-            <ThemedText style={styles.versionText}>
-              App Version 1.0.0
-            </ThemedText>
-          </View>
-          <ThemedText style={styles.buildText}>Build 2024.01</ThemedText>
         </ThemedView>
       </ThemedView>
     </ThemedView>
@@ -165,20 +149,9 @@ const styles = StyleSheet.create({
   actionButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#ffffff',
     padding: 16,
     borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#f1f5f9',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
-  },
+ },
   buttonIconContainer: {
     width: 44,
     height: 44,
@@ -194,7 +167,6 @@ const styles = StyleSheet.create({
   buttonTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#111827',
   },
   buttonDescription: {
     fontSize: 14,

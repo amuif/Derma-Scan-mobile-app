@@ -227,7 +227,6 @@ export default function ProfileData() {
           </ThemedView>
         </ThemedView>
       </ThemedView>
-
       <ThemedView style={styles.historyCard}>
         <ThemedView style={styles.historyHeader}>
           <Ionicons name="time-outline" size={24} color="#3b82f6" />
@@ -417,7 +416,6 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     borderWidth: 1,
     borderColor: '#d1d5db',
-    backgroundColor: '#ffffff',
   },
   passwordContainer: {
     position: 'relative',
@@ -481,20 +479,10 @@ const styles = StyleSheet.create({
   historyButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#ffffff',
     padding: 20,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#f1f5f9',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
-  },
+   },
   buttonIconContainer: {
     width: 50,
     height: 50,
@@ -510,7 +498,6 @@ const styles = StyleSheet.create({
   buttonTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#111827',
   },
   buttonDescription: {
     fontSize: 14,

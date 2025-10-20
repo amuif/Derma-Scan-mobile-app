@@ -32,6 +32,7 @@ export const authStorage = {
   setUser: async (user: User): Promise<void> => {
     try {
       await SecureStore.setItemAsync('user', JSON.stringify(user));
+      console.log('setting user', JSON.stringify(user));
     } catch (error) {
       console.error('Error saving user to storage:', error);
     }

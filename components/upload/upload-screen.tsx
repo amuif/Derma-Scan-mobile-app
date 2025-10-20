@@ -116,8 +116,12 @@ const SkinLesionUploadScreen: React.FC = () => {
       setHasSkinLesion(null);
       try {
         const response = await checkImage(file);
-        console.log("message:",response?.message ==="No skin condition detected")
-        if (response && response.message !== "No skin condition detected") {
+        console.log(response);
+        console.log(
+          'message:',
+          response?.message === 'No skin condition detected',
+        );
+        if (response && response.message !== 'No skin condition detected') {
           setHasSkinLesion(true);
         } else {
           setHasSkinLesion(false);
@@ -167,8 +171,13 @@ const SkinLesionUploadScreen: React.FC = () => {
 
       try {
         const response = await checkImage(file);
-                  if (response && response.message !== "No skin condition detected") {
+        console.log('response', response);
+        console.log(
+          'message:',
+          response?.message === 'No skin condition detected',
+        );
 
+        if (response && response.message !== 'No skin condition detected') {
           setHasSkinLesion(true);
         } else {
           setHasSkinLesion(false);

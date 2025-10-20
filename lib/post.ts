@@ -64,8 +64,8 @@ export const postApi = {
       });
       return response.json() as unknown as Post[];
     } catch (error) {
-    console.log('Error creating post', error);
-      return []
+      console.log('Error creating post', error);
+      return [];
     }
   },
   updatePost: async ({

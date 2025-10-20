@@ -45,6 +45,7 @@ export const useLoginMutation = () => {
       authApi.login(email, password),
     onSuccess: async (data) => {
       await authStorage.setToken(data.accessToken);
+      await authStorage.setUser(data.user);
       setUser(data.user);
 
       queryClient.setQueryData(authQueryKeys.token(), data.accessToken);
@@ -72,6 +73,7 @@ export const useUpdateCurrentUser = () => {
     onSuccess: async (data) => {
       console.log(data);
       setUser(data.user);
+      await authStorage.setUser(data.user);
 
       // Also update the user in SecureStore to keep it in sync
       authStorage.setUser(data.user);
@@ -85,7 +87,7 @@ export const useUpdateCurrentUser = () => {
 export const useRegisterMutation = () => {
   const queryClient = useQueryClient();
   const router = useRouter();
-
+  const { setUser } = useAuthStore();
   return useMutation({
     mutationFn: ({
       email,
@@ -102,6 +104,7 @@ export const useRegisterMutation = () => {
       console.log(data);
       await authStorage.setToken(data.accessToken);
       await authStorage.setUser(data.user);
+      setUser(data.user);
 
       queryClient.setQueryData(authQueryKeys.token(), data.accessToken);
       queryClient.setQueryData(authQueryKeys.user(), data.user);
@@ -145,7 +148,6 @@ export const useDeleteMutation = () => {
     },
     onSuccess: async () => {
       router.replace('/login');
-
       queryClient.removeQueries({ queryKey: authQueryKeys.all });
     },
     onError: async (error) => {

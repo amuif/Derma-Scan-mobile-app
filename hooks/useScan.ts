@@ -17,6 +17,8 @@ export const useCheckImage = () => {
     mutationFn: async (file: File) => {
       const token = await authStorage.getToken();
       const user = await authStorage.getUser();
+
+      console.log('user', user, 'token', token);
       if (!user || !token) return;
       return scanApi.checkImage(token, file);
     },

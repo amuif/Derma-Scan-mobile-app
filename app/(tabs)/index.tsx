@@ -39,13 +39,18 @@ const HomeScreen: React.FC = () => {
   } = useScanHistory();
 
   useEffect(() => {
-    const selfPost = posts?.filter((post) => post.author.id === user?.id) || [];
-    setRecentPosts(selfPost);
+    if (posts) {
+      const selfPost =
+        posts?.filter((post) => post.author.id === user?.id) || [];
+      setRecentPosts(selfPost);
+    }
   }, [posts, user]);
 
   useEffect(() => {
-    const selfScan = scans?.filter((scan) => scan.user.id === user?.id) || [];
-    setRecentScans(selfScan.slice(0, 3));
+    if (scans) {
+      const selfScan = scans?.filter((scan) => scan.user.id === user?.id) || [];
+      setRecentScans(selfScan.slice(0, 3));
+    }
   }, [scans, user]);
 
   const refreshing = postsLoading || scansLoading;

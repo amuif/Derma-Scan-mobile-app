@@ -16,6 +16,7 @@ export const scanApi = {
       });
 
       const result = (await response.json()) as CheckImage;
+      console.log('result', result);
       return result;
     } catch (error) {
       console.error('Error uploading image', error);

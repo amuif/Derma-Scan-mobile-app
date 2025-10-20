@@ -6,8 +6,7 @@ export const getBaseUrl = () => {
       Constants.manifest?.debuggerHost ||
       Constants.manifest2?.extra?.expoGo?.debuggerHost;
 
-
-    return 'https://derma-scan-backend-zcmz.onrender.com'; 
+    return 'https://derma-scan-backend-zcmz.onrender.com';
   } else {
     return 'https://derma-scan-backend-h0vm.onrender.com';
   }

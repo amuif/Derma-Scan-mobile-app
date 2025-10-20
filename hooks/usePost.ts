@@ -25,7 +25,6 @@ export const useGetAllowedPost = () => {
     queryFn: async () => {
       const token = await authStorage.getToken();
       if (!token) return;
-
       return postApi.findAllowedPosts(token);
     },
   });

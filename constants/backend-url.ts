@@ -6,12 +6,8 @@ export const getBaseUrl = () => {
       Constants.manifest?.debuggerHost ||
       Constants.manifest2?.extra?.expoGo?.debuggerHost;
 
-    if (debuggerHost) {
-      const hostname = debuggerHost.split(':')[0];
-      return `http://${hostname}:4000`;
-    }
 
-    return 'http://10.210.144.83:4000'; // fallback
+    return 'https://derma-scan-backend-zcmz.onrender.com'; 
   } else {
     return 'https://derma-scan-backend-h0vm.onrender.com';
   }

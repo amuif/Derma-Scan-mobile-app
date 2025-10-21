@@ -482,7 +482,7 @@ const styles = StyleSheet.create({
     padding: 20,
     borderRadius: 16,
     borderWidth: 1,
-   },
+  },
   buttonIconContainer: {
     width: 50,
     height: 50,

@@ -151,7 +151,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 16,
     borderRadius: 12,
- },
+  },
   buttonIconContainer: {
     width: 44,
     height: 44,
